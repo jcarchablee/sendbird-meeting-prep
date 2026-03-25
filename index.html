@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meeting Prep Planner — Sendbird</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0a; --bg2:#111111; --bg3:#181818; --bg4:#202020;
+  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.12);
+  --accent:#BFFF58; --accent2:#9FE1CB;
+  --text:#f0f0f0; --text2:#999; --text3:#555; --danger:#ff6b6b;
+  --radius:10px; --radius-lg:16px;
+  --font:'Syne',sans-serif; --mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;min-height:100vh;line-height:1.6;}
+
+/* Layout */
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:224px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.logo{font-size:12px;font-weight:700;letter-spacing:0.08em;color:var(--accent);text-transform:uppercase;margin-bottom:24px;display:flex;align-items:center;gap:8px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+.main{flex:1;padding:36px 44px;max-width:860px;}
+
+/* Nav */
+.nav-group-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;margin-top:18px;padding-left:4px;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--radius);font-size:13px;color:var(--text2);cursor:pointer;transition:all 0.15s;margin-bottom:2px;border:none;background:transparent;width:100%;text-align:left;font-family:var(--font);}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:var(--bg4);color:var(--text);}
+.nav-item.active .nav-num{color:var(--accent);}
+.nav-item.locked{opacity:0.35;cursor:not-allowed;}
+.nav-item .nav-num{font-family:var(--mono);font-size:11px;width:18px;text-align:center;flex-shrink:0;}
+
+.wave-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius);font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s;margin-bottom:2px;border:none;background:transparent;width:100%;text-align:left;font-family:var(--font);}
+.wave-item:hover{background:var(--bg3);color:var(--text);}
+.wave-item.active{background:var(--bg4);color:var(--text);}
+.wave-item.locked{opacity:0.3;cursor:not-allowed;}
+.wave-item .w-icon{font-size:12px;width:16px;text-align:center;flex-shrink:0;}
+
+/* Step */
+.step{display:none;}
+.step.active{display:block;}
+.step-header{margin-bottom:28px;}
+.step-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:10px;letter-spacing:0.05em;}
+.step-tag .tag-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+h1{font-size:26px;font-weight:700;color:var(--text);line-height:1.2;margin-bottom:6px;}
+.step-desc{font-size:14px;color:var(--text2);}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px;margin-bottom:12px;transition:border-color 0.15s;}
+.card:hover{border-color:var(--border2);}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.card-title{font-size:15px;font-weight:600;color:var(--text);}
+.card-subtitle{font-size:12px;color:var(--text2);margin-top:2px;font-style:italic;}
+.card-actions{display:flex;gap:8px;flex-shrink:0;}
+
+/* Grids */
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+
+/* Mad lib */
+.madlib-sentence{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 26px;font-size:16px;line-height:2.6;color:var(--text2);margin-bottom:20px;}
+.ml-input{background:transparent;border:none;border-bottom:1.5px solid var(--border2);color:var(--text);font-size:16px;font-family:var(--font);padding:2px 6px;outline:none;transition:border-color 0.15s;}
+.ml-input:focus{border-bottom-color:var(--accent);}
+.ml-sm{width:100px;} .ml-md{width:155px;} .ml-lg{width:210px;} .ml-xl{width:270px;}
+
+/* Form */
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;}
+.field input,.field textarea,.field select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:14px;font-family:var(--font);padding:9px 13px;outline:none;transition:border-color 0.15s;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--border2);}
+.field textarea{resize:vertical;min-height:80px;line-height:1.5;}
+.field select option{background:var(--bg3);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* Buttons */
+.btn-primary{background:var(--accent);color:#000;border:none;padding:10px 22px;border-radius:var(--radius);font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:8px;}
+.btn-primary:hover{background:#d4ff6a;transform:translateY(-1px);}
+.btn-primary:disabled{background:var(--bg4);color:var(--text3);cursor:not-allowed;transform:none;}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2);padding:8px 16px;border-radius:var(--radius);font-size:13px;font-family:var(--font);cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-ghost:hover{background:var(--bg3);color:var(--text);}
+.btn-ghost:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-teal{background:transparent;color:var(--accent2);border:1px solid rgba(159,225,203,0.3);padding:6px 12px;border-radius:var(--radius);font-size:12px;font-family:var(--font);cursor:pointer;transition:all 0.15s;}
+.btn-teal:hover{background:rgba(159,225,203,0.08);}
+.btn-teal.active{background:rgba(159,225,203,0.12);}
+
+/* Tags */
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.tag{font-size:11px;padding:3px 10px;border-radius:20px;font-family:var(--mono);}
+.tag-green{background:rgba(191,255,88,0.1);color:#9FE1CB;}
+.tag-teal{background:rgba(159,225,203,0.1);color:#9FE1CB;}
+.tag-amber{background:rgba(255,193,7,0.1);color:#ffc107;}
+.tag-red{background:rgba(255,107,107,0.1);color:#ff6b6b;}
+.tag-gray{background:rgba(255,255,255,0.06);color:var(--text2);}
+
+/* Loading */
+.loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;gap:14px;color:var(--text2);font-size:14px;}
+.spinner{width:26px;height:26px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Context banner */
+.ctx-banner{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:9px 14px;font-size:12px;color:var(--text2);margin-bottom:20px;display:none;align-items:center;gap:8px;}
+.ctx-banner strong{color:var(--text);}
+
+/* Action bar */
+.action-bar{display:flex;align-items:center;justify-content:space-between;padding-top:20px;margin-top:8px;border-top:1px solid var(--border);}
+.action-bar-right{display:flex;gap:8px;}
+.sel-count{font-size:13px;color:var(--text2);font-family:var(--mono);}
+
+/* Expand */
+.collapsed .card-full{display:none;}
+.expand-toggle{font-size:12px;color:var(--accent);cursor:pointer;background:none;border:none;font-family:var(--font);padding:4px 0;margin-top:6px;}
+.card-body{font-size:13px;color:var(--text2);line-height:1.7;}
+.card-body p{margin-bottom:6px;}
+.section-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px;margin-top:10px;}
+.refresh-badge{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px;cursor:pointer;background:none;border:none;font-family:var(--font);padding:4px 8px;border-radius:6px;transition:all 0.15s;}
+.refresh-badge:hover{background:var(--bg3);color:var(--text2);}
+
+/* Stakeholder input rows */
+.stakeholder-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:center;}
+.stakeholder-row input{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;font-family:var(--font);padding:8px 12px;outline:none;}
+.remove-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:2px;}
+.remove-btn:hover{color:var(--danger);}
+
+/* Angle cards */
+.angle-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;cursor:pointer;transition:all 0.15s;user-select:none;}
+.angle-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.angle-card.selected{border-color:var(--accent);background:rgba(191,255,88,0.04);}
+.angle-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;line-height:1.4;}
+.angle-why{font-size:12px;color:var(--text2);margin-bottom:5px;line-height:1.5;}
+.angle-hook{font-size:12px;color:var(--accent2);line-height:1.5;margin-bottom:8px;}
+
+/* Big Picture */
+.big-headline{font-size:19px;font-weight:600;line-height:1.4;color:var(--text);border-left:3px solid var(--accent);padding-left:16px;margin-bottom:24px;}
+.why-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px;}
+.why-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 18px;}
+.why-label{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
+.why-label.change{color:var(--accent);}
+.why-label.now{color:#ffc107;}
+.why-label.us{color:var(--accent2);}
+.why-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;line-height:1.4;}
+.why-card ul{list-style:none;}
+.why-card ul li{font-size:12px;color:var(--text2);padding:3px 0 3px 12px;position:relative;line-height:1.5;}
+.why-card ul li::before{content:'•';position:absolute;left:0;color:var(--text3);}
+
+/* Pitch */
+.pitch-arc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px;}
+.pitch-block{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 18px;}
+.pitch-block-num{font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:5px;}
+.pitch-block-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;}
+.pitch-block-body{font-size:13px;color:var(--text2);line-height:1.7;}
+
+/* Emails */
+.email-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;margin-bottom:12px;}
+.email-label{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent2);margin-bottom:8px;}
+.email-subject{font-size:13px;font-weight:600;color:var(--text);padding:8px 12px;background:var(--bg3);border-radius:var(--radius);border-left:2px solid var(--accent);margin-bottom:12px;}
+.email-body{font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap;}
+
+/* Discovery */
+.disc-q{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:10px;}
+.disc-q-top{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}
+.disc-tag{font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:3px 10px;border-radius:20px;flex-shrink:0;margin-top:2px;}
+.disc-tag.change{background:rgba(191,255,88,0.1);color:var(--accent);}
+.disc-tag.now{background:rgba(255,193,7,0.1);color:#ffc107;}
+.disc-tag.us{background:rgba(159,225,203,0.1);color:var(--accent2);}
+.disc-q-text{font-size:14px;color:var(--text);font-weight:500;line-height:1.5;}
+.disc-q-why{font-size:12px;color:var(--text3);font-style:italic;line-height:1.5;}
+
+/* Objections */
+.obj-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;margin-bottom:10px;}
+.obj-name{font-size:14px;font-weight:600;color:var(--danger);margin-bottom:5px;}
+.obj-quote{font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.6;font-style:italic;}
+.obj-strat-label{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent2);margin-bottom:4px;}
+.obj-strat{font-size:13px;color:var(--text);line-height:1.6;}
+
+/* Stakeholder map */
+.smap-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.persona-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 18px;}
+.persona-role-label{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;}
+.persona-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px;}
+.persona-row{margin-top:8px;}
+.persona-row-label{font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent2);margin-bottom:3px;}
+.persona-row p{font-size:12px;color:var(--text2);line-height:1.5;}
+
+/* Signal items */
+.signal-item{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.signal-item:last-child{border-bottom:none;}
+.signal-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.signal-dot.green{background:var(--accent);}
+.signal-dot.amber{background:#ffc107;}
+.signal-dot.red{background:var(--danger);}
+.signal-title{font-weight:600;color:var(--text);margin-bottom:2px;}
+.signal-detail{color:var(--text2);line-height:1.5;}
+.signal-time{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px;}
+
+/* Output doc */
+.output-doc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px 30px;font-size:12px;line-height:1.9;color:var(--text2);white-space:pre-wrap;font-family:var(--mono);}
+
+/* Modules (collapsible) */
+.module{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden;}
+.module-header{padding:15px 20px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.module-header:hover{background:var(--bg3);}
+.module-num{font-family:var(--mono);font-size:11px;color:var(--accent);width:20px;}
+.module-title{font-size:14px;font-weight:600;flex:1;}
+.module-chevron{color:var(--text3);font-size:12px;transition:transform 0.15s;}
+.module.open .module-chevron{transform:rotate(180deg);}
+.module-body{padding:20px;display:none;border-top:1px solid var(--border);}
+.module.open .module-body{display:block;}
+
+.story-bullet{display:flex;gap:10px;margin-bottom:12px;font-size:13px;color:var(--text2);line-height:1.6;}
+.story-bullet-label{font-weight:600;color:var(--text);flex-shrink:0;min-width:136px;font-size:12px;}
+.tt-item{background:var(--bg3);border-radius:var(--radius);padding:11px 14px;margin-bottom:8px;font-size:13px;}
+.tt-label{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:3px;}
+.tt-content{color:var(--text);}
+.vf-block{background:rgba(191,255,88,0.04);border:1px solid rgba(191,255,88,0.15);border-radius:var(--radius);padding:14px;margin-bottom:8px;}
+.vf-label{font-size:10px;font-weight:700;color:var(--accent);margin-bottom:3px;letter-spacing:0.06em;}
+.hypo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.hypo-field{background:var(--bg3);border-radius:var(--radius);padding:12px 14px;}
+.hypo-label{font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent2);margin-bottom:5px;}
+.hypo-field p{font-size:12px;color:var(--text2);line-height:1.5;}
+
+/* Divider */
+hr.div{border:none;border-top:1px solid var(--border);margin:16px 0;}
+
+/* Ask Coco */
+#coco-trigger{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid rgba(159,225,203,0.4);border-radius:24px;padding:10px 18px;display:none;align-items:center;gap:8px;cursor:pointer;z-index:200;font-size:13px;font-weight:600;color:var(--accent2);font-family:var(--font);transition:all 0.15s;}
+#coco-trigger:hover{background:var(--bg3);}
+#coco-panel{position:fixed;bottom:24px;right:24px;width:370px;max-height:540px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);display:flex;flex-direction:column;z-index:200;box-shadow:0 8px 40px rgba(0,0,0,0.6);}
+#coco-panel.hidden{display:none;}
+.coco-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.coco-title{display:flex;align-items:center;gap:8px;}
+.coco-dot{width:8px;height:8px;border-radius:50%;background:var(--accent2);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.coco-name{font-size:14px;font-weight:700;}
+.coco-sub{font-size:11px;color:var(--text2);}
+.coco-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1;}
+.coco-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:0;}
+.coco-msg{max-width:86%;font-size:13px;line-height:1.6;padding:9px 13px;border-radius:12px;}
+.coco-msg.assistant{background:var(--bg3);color:var(--text2);align-self:flex-start;border-radius:4px 12px 12px 12px;}
+.coco-msg.user{background:rgba(191,255,88,0.1);color:var(--text);align-self:flex-end;border-radius:12px 4px 12px 12px;}
+.coco-msg.thinking{color:var(--text3);font-style:italic;}
+.coco-input-row{display:flex;gap:8px;padding:11px 13px;border-top:1px solid var(--border);flex-shrink:0;}
+.coco-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;font-family:var(--font);padding:7px 11px;outline:none;}
+.coco-input:focus{border-color:var(--border2);}
+.coco-send{background:var(--accent);color:#000;border:none;border-radius:var(--radius);padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);}
+.coco-send:hover{background:#d4ff6a;}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--accent);color:#000;padding:9px 20px;border-radius:var(--radius);font-size:13px;font-weight:700;opacity:0;transition:all 0.2s;z-index:999;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.error-msg{color:var(--danger);font-size:13px;padding:10px 0;}
+</style>
+</head>
+<body>
+<style>
+.mode-bar{position:fixed;top:0;left:0;right:0;height:44px;background:#111111;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;padding:0 20px;gap:0;z-index:100;}
+.mode-btn{padding:6px 18px;font-size:13px;font-weight:600;font-family:'Syne',sans-serif;border:none;background:transparent;color:#999;cursor:pointer;border-radius:10px;transition:all 0.15s;text-decoration:none;display:flex;align-items:center;}
+.mode-btn:hover{color:#f0f0f0;background:#181818;}
+.mode-btn.active{color:#BFFF58;background:rgba(191,255,88,0.08);}
+.mode-divider{width:1px;height:20px;background:rgba(255,255,255,0.12);margin:0 8px;}
+</style>
+<div class="mode-bar">
+  <a href="index.html" class="mode-btn active">&#9673; Meeting Prep</a>
+  <div class="mode-divider"></div>
+  <a href="account-plan.html" class="mode-btn">&#9632; Account Plan</a>
+</div>
+<div style="height:44px;"></div>
+<div class="shell">
+
+<!-- ── Sidebar ── -->
+<nav class="sidebar">
+  <div class="logo"><div class="logo-dot"></div>Meeting Prep</div>
+
+  <div class="nav-group-label">Setup</div>
+  <button class="nav-item active" id="nav-1" onclick="navTo(1)"><span class="nav-num">01</span> Intake</button>
+  <button class="nav-item locked" id="nav-2" onclick="navTo(2)"><span class="nav-num">02</span> Know Account</button>
+  <button class="nav-item locked" id="nav-3" onclick="navTo(3)"><span class="nav-num">03</span> Angles</button>
+
+  <div class="nav-group-label">Wave</div>
+  <button class="wave-item locked" id="nav-s1" onclick="goSection('s1')"><span class="w-icon">&#9672;</span> Big Picture</button>
+  <button class="wave-item locked" id="nav-s2" onclick="goSection('s2')"><span class="w-icon">&#9711;</span> Your Pitch</button>
+  <button class="wave-item locked" id="nav-s3" onclick="goSection('s3')"><span class="w-icon">&#9993;</span> Outbound Emails</button>
+  <button class="wave-item locked" id="nav-s4" onclick="goSection('s4')"><span class="w-icon">?</span> Discovery</button>
+  <button class="wave-item locked" id="nav-s5" onclick="goSection('s5')"><span class="w-icon">!</span> Risks &amp; Objections</button>
+  <button class="wave-item locked" id="nav-s6" onclick="goSection('s6')"><span class="w-icon">&#9670;</span> Stakeholder Map</button>
+
+  <div class="nav-group-label">Output</div>
+  <button class="nav-item locked" id="nav-5" onclick="navTo(5)"><span class="nav-num">&#8595;</span> Prep Doc</button>
+
+  <div class="nav-group-label" style="margin-top:auto;">Settings</div>
+  <button class="nav-item" onclick="openCtx()"><span class="nav-num">&#9881;</span> Sendbird Config</button>
+</nav>
+
+<!-- ── Main ── -->
+<main class="main">
+
+<!-- STEP 1: INTAKE -->
+<div class="step active" id="step-1">
+  <div class="step-header">
+    <div class="step-tag"><div class="tag-dot"></div>Step 01</div>
+    <h1>Set up your meeting</h1>
+    <p class="step-desc">Fill in your opportunity. The more context you add, the sharper the output.</p>
+  </div>
+  <div class="madlib-sentence">
+    <input class="ml-input ml-md" id="rep-name" placeholder="Your name" value="Sendbird AE" /> is meeting with
+    <input class="ml-input ml-md" id="exec-name" placeholder="Exec name" />,
+    <input class="ml-input ml-md" id="exec-title" placeholder="VP Customer Success" /> at
+    <input class="ml-input ml-lg" id="company-name" placeholder="Company name" />, a
+    <input class="ml-input ml-md" id="industry" placeholder="industry" /> company, to discuss
+    <input class="ml-input ml-xl" id="meeting-obj" placeholder="meeting objective" />.
+  </div>
+  <div class="card" style="margin-bottom:18px;">
+    <div class="field-row">
+      <div class="field">
+        <label>Deal Stage</label>
+        <select id="deal-stage">
+          <option>Prospecting</option><option selected>Discovery</option>
+          <option>Technical Eval</option><option>Negotiation</option>
+          <option>Renewal</option><option>Expansion</option><option>QBR</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Product / Solution</label>
+        <input id="product" value="delight.ai AI concierge" />
+      </div>
+    </div>
+    <div class="field">
+      <label>Last interaction</label>
+      <input id="last-interaction" placeholder="e.g. Last call 2 weeks ago re: API performance concerns" />
+    </div>
+    <div class="field">
+      <label>Deal notes &amp; docs (paste anything relevant)</label>
+      <textarea id="deal-notes" placeholder="Paste call notes, email context, SFDC notes…"></textarea>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:22px;">
+    <div class="card-header">
+      <div><div class="card-title">Known stakeholders</div><div class="card-subtitle">Add up to 3 people in the room</div></div>
+      <button class="btn-ghost" onclick="addStakeholder()" id="add-sk-btn">+ Add</button>
+    </div>
+    <div id="sk-list"></div>
+  </div>
+  <button class="btn-primary" onclick="startDiscovery()">Start Account Plan Discovery →</button>
+</div>
+
+<!-- STEP 2: KNOW YOUR ACCOUNT -->
+<div class="step" id="step-2">
+  <div class="step-header">
+    <div class="step-tag"><div class="tag-dot"></div>Step 02</div>
+    <h1>Know your account</h1>
+    <p class="step-desc">AI-generated intelligence. Pin cards to include them in your prep doc.</p>
+  </div>
+  <div class="ctx-banner" id="ctx-2"></div>
+  <div id="intel-cards"><div class="loading-state"><div class="spinner"></div><span>Generating account intelligence…</span></div></div>
+  <div class="action-bar" id="step2-bar" style="display:none;">
+    <div></div>
+    <div class="action-bar-right">
+      <button class="btn-ghost" onclick="navTo(1)">← Back</button>
+      <button class="btn-primary" onclick="goToAngles()">Generate meeting angles →</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3: ANGLES -->
+<div class="step" id="step-3">
+  <div class="step-header">
+    <div class="step-tag"><div class="tag-dot"></div>Step 03</div>
+    <h1>Meeting angles</h1>
+    <p class="step-desc">Select 1–3 angles to drive your conversation. These shape everything in the Wave.</p>
+  </div>
+  <div class="ctx-banner" id="ctx-3"></div>
+  <div id="angles-grid"><div class="loading-state"><div class="spinner"></div><span>Brainstorming meeting angles…</span></div></div>
+  <div class="action-bar" id="step3-bar" style="display:none;">
+    <span class="sel-count" id="angle-count">0 selected</span>
+    <div class="action-bar-right">
+      <button class="btn-ghost" onclick="navTo(2)">← Back</button>
+      <button class="btn-primary" id="build-btn" onclick="buildWave()" disabled>Build my prep →</button>
+    </div>
+  </div>
+</div>
+
+<!-- WAVE: BIG PICTURE -->
+<div class="step" id="step-s1">
+  <div class="step-header">
+    <div class="step-tag"><div class="tag-dot"></div>Wave — Big Picture</div>
+    <h1>The big picture</h1>
+    <p class="step-desc">Cost of inaction + the three forces driving urgency for this buyer.</p>
+  </div>
+  <div class="ctx-banner" id="ctx-s1"></div>
+  <div id="bp-content"><div class="loading-state"><div class="spinner"></div><span>Building big picture…</span></div></div>
+  <div class="action-bar" id="s1-bar" style="display:none;">
+    <div></div>
+    <div class="action-bar-right">
+      <button class="btn-ghost" onclick="regenSection('s1')">↻ Regenerate</button>
+      <button class="btn-primary" onclick="goSection('s2')">Your pitch →</button>
+    </div>
+  </div>
+</div>
+
+<!-- WAVE: YOUR PITCH -->
+<div class="step" id="step-s2">
+  <div class="step-header">
+    <div class="step-tag"><div class="tag-dot"></div>Wave — Your Pitch</div>
+    <h1>Your pitch</h1>
+    <p class="step-desc">Now vs. Next — shared reality, vision, and the bridge to get there.</p>
+  </div>
+  <div class="ctx-banner" id="ctx-s2"></div>
+  <div id="pitch-content"><div class="loading-state"><div class="spinner"></div><span>Crafting your pitch…</span></div></div>
+  <div class="action-bar" id="s2-bar" style="display:none;">
+    <div></div>
+    <div class="action-bar-right">
+      <button class="btn-ghost" onclick="goSection('s1')">← Back</button>
+      <button class="btn-primary" onclick="goSection('s3')">Outbound emails →</button>
+    </div>
+  </div>
+</div>
+
+<!-- WAVE: OUTBOUND EMAILS -->
+<div class="step" id="step-s3">
+  <div class="step-header">
+    <div class="step-tag"><div class="tag-dot"></div>Wave — Outbound Emails</div>
+    <h1>Outbound emails</h1>
+    <p class="step-desc">Two personalized templates — copy, adapt, and send.</p>
+  </div>
+  <div class="ctx-banner" id="ctx-s3"></div>
+  <div id="email-content"><div class="loading-state"><div class="spinner"></div><span>Writing emails…</span></div></div>
+  <div class="action-bar" id="s3-bar" style="display:none;">
+    <div></div>
+    <div class="action-bar-right">
+      <button class="btn-ghost" onclick="goSection('s2')">← Back</button>
+      <button class="btn-primary" onclick="goSection('s4')">Discovery questions →</button>
+    </div>
+  </div>
+</div>
+
+<!-- WAVE: DISCOVERY -->
+<div class="step" id="step-s4">
+  <div class="step-header">
+    <div class="step-tag"><div class="tag-dot"></div>Wave — Discovery</div>
+    <h1>Discovery questions</h1>
+    <p class="step-desc">Six insight-led questions mapped to Why Change, Why Now, and Why Us.</p>
+  </div>
+  <div class="ctx-banner" id="ctx-s4"></div>
+  <div id="disc-content"><div class="loading-state"><div class="spinner"></div><span>Generating discovery questions…</span></div></div>
+  <div class="action-bar" id="s4-bar" style="display:none;">
+    <div></div>
+    <div class="action-bar-right">
+      <button class="btn-ghost" onclick="goSection('s3')">← Back</button>
+      <button class="btn-primary" onclick="goSection('s5')">Risks &amp; objections →</button>
+    </div>
+  </div>
+</div>
+
+<!-- WAVE: RISKS & OBJECTIONS -->
+<div class="step" id="step-s5">
+  <div class="step-header">
+    <div class="step-tag"><div class="tag-dot"></div>Wave — Risks &amp; Objections</div>
+    <h1>Risks &amp; objections</h1>
+    <p class="step-desc">Top 5 objections this buyer will raise — with response strategies.</p>
+  </div>
+  <div class="ctx-banner" id="ctx-s5"></div>
+  <div id="obj-content"><div class="loading-state"><div class="spinner"></div><span>Preparing objection responses…</span></div></div>
+  <div class="action-bar" id="s5-bar" style="display:none;">
+    <div></div>
+    <div class="action-bar-right">
+      <button class="btn-ghost" onclick="goSection('s4')">← Back</button>
+      <button class="btn-primary" onclick="goSection('s6')">Stakeholder map →</button>
+    </div>
+  </div>
+</div>
+
+<!-- WAVE: STAKEHOLDER MAP -->
+<div class="step" id="step-s6">
+  <div class="step-header">
+    <div class="step-tag"><div class="tag-dot"></div>Wave — Stakeholder Map</div>
+    <h1>Stakeholder map</h1>
+    <p class="step-desc">Key roles in this deal — priorities, concerns, and how to engage each one.</p>
+  </div>
+  <div class="ctx-banner" id="ctx-s6"></div>
+  <div id="smap-content"><div class="loading-state"><div class="spinner"></div><span>Mapping stakeholders…</span></div></div>
+  <div class="action-bar" id="s6-bar" style="display:none;">
+    <div></div>
+    <div class="action-bar-right">
+      <button class="btn-ghost" onclick="goSection('s5')">← Back</button>
+      <button class="btn-primary" onclick="navTo(5)">Generate prep doc →</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 5: PREP DOC -->
+<div class="step" id="step-5">
+  <div class="step-header">
+    <div class="step-tag"><div class="tag-dot"></div>Output</div>
+    <h1>Your prep doc</h1>
+    <p class="step-desc">Everything compiled. Copy to SFDC, Gong, Notion, or Slack.</p>
+  </div>
+  <div class="ctx-banner" id="ctx-5"></div>
+  <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+    <button class="btn-primary" onclick="copyDoc()">Copy full prep doc</button>
+    <button class="btn-ghost" onclick="checkSignals()">&#8635; Check live signals</button>
+    <button class="btn-ghost" onclick="navTo(1)">Start new prep</button>
+  </div>
+  <div id="doc-content"><div class="loading-state"><div class="spinner"></div><span>Compiling prep doc…</span></div></div>
+  <div id="signals-section" style="display:none;margin-top:24px;">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Live signals</div>
+        <button class="refresh-badge" onclick="checkSignals()">&#8635; Refresh</button>
+      </div>
+      <div id="signals-content"></div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- Ask Coco trigger -->
+<button id="coco-trigger" onclick="openCoco()">
+  <div class="coco-dot"></div> Ask Coco
+</button>
+
+<!-- Ask Coco panel -->
+<div id="coco-panel" class="hidden">
+  <div class="coco-header">
+    <div class="coco-title">
+      <div class="coco-dot"></div>
+      <div><div class="coco-name">Coco</div><div class="coco-sub" id="coco-sub">Deal assistant</div></div>
+    </div>
+    <button class="coco-close" onclick="closeCoco()">&#215;</button>
+  </div>
+  <div class="coco-msgs" id="coco-msgs">
+    <div class="coco-msg assistant">Hi! I know your deal context. Ask me to draft an email, handle an objection, rewrite the pitch, or anything else about this opportunity.</div>
+  </div>
+  <div class="coco-input-row">
+    <input class="coco-input" id="coco-input" placeholder="Ask anything about this deal…" onkeydown="if(event.key==='Enter')sendCoco()" />
+    <button class="coco-send" onclick="sendCoco()">&#8593;</button>
+  </div>
+</div>
+
+<!-- Sendbird Config panel -->
+<div id="ctx-panel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;align-items:center;justify-content:center;">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:30px;width:520px;max-width:92vw;max-height:80vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <div style="font-size:16px;font-weight:600;">Sendbird positioning context</div>
+      <button onclick="closeCtx()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;">&#215;</button>
+    </div>
+    <div class="field">
+      <label>Edit to reflect current messaging, products, and proof points</label>
+      <textarea id="sb-context-input" style="min-height:220px;font-family:var(--mono);font-size:12px;"></textarea>
+    </div>
+    <button class="btn-primary" onclick="saveCtx()">Save context</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const S = {
+  stakeholders: [],
+  intelCards: {},
+  pinnedCards: new Set(),
+  angles: [],
+  selectedAngles: new Set(),
+  sectionData: {},
+  sectionDone: new Set(),
+  prepDoc: '',
+  cocoHistory: [],
+  unlockedSteps: new Set([1]),
+  unlockedSections: new Set(),
+};
+
+let SENDBIRD_CTX = `Sendbird is an AI-powered customer communications platform.
+
+Products:
+- Sendbird Chat SDK: Real-time in-app messaging for mobile/web apps (DoorDash, Rakuten, Hinge, NBA, Virgin Mobile)
+- delight.ai: AI concierge for proactive, personalized customer engagement — anticipates needs, automates workflows
+- Sendbird AI Chatbot: Deflects support tickets, handles tier-1 queries, escalates to human agents
+- Sendbird Desk: Omnichannel customer service with AI-assist for live agents
+
+Key value propositions:
+- Deflect 30–60% of tier-1 support tickets with AI, reducing cost-to-serve
+- Increase CSAT through faster, more personalized responses
+- Replace legacy chat vendors (Intercom, Zendesk Chat, Freshchat) with AI-native stack
+- Real-time messaging infrastructure at scale — no build required
+- Proactive engagement: reach customers before they reach support
+
+Proof points:
+- DoorDash: 10M+ messages/day on Sendbird infrastructure
+- Customers averaging 40% ticket deflection within 90 days of AI deployment
+- 2–3x improvement in first-response time after AI implementation
+- Average 6-month payback period
+
+Typical buyers: VP Customer Success, VP/Director Engineering, CTO, Head of CX, Chief Digital Officer
+Common deal triggers: high support volume, poor CSAT, legacy vendor replacement, new product launch, APAC/EMEA expansion`;
+
+document.getElementById('sb-context-input').value = SENDBIRD_CTX;
+
+// ── Nav ────────────────────────────────────────────────────────────────────
+function navTo(n) {
+  if (!S.unlockedSteps.has(n)) return;
+  document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item, .wave-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+  const nav = document.getElementById('nav-' + n);
+  if (nav) nav.classList.add('active');
+  if (n === 5) buildDoc();
+}
+
+function goSection(sid) {
+  if (!S.unlockedSections.has(sid)) return;
+  document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item, .wave-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('step-' + sid).classList.add('active');
+  const nav = document.getElementById('nav-' + sid);
+  if (nav) nav.classList.add('active');
+  setBanner(sid);
+  if (!S.sectionDone.has(sid)) genSection(sid);
+}
+
+function regenSection(sid) {
+  S.sectionDone.delete(sid);
+  genSection(sid);
+}
+
+function unlock(n) {
+  S.unlockedSteps.add(n);
+  const el = document.getElementById('nav-' + n);
+  if (el) el.classList.remove('locked');
+}
+
+function unlockSec(sid) {
+  S.unlockedSections.add(sid);
+  const el = document.getElementById('nav-' + sid);
+  if (el) el.classList.remove('locked');
+}
+
+function markDone(n) {
+  const el = document.getElementById('nav-' + n);
+  if (el) el.classList.add('done');
+}
+
+// ── Banners ────────────────────────────────────────────────────────────────
+function setBanner(id) {
+  const c = inputs();
+  const el = document.getElementById('ctx-' + id);
+  if (!el) return;
+  el.innerHTML = `<strong>${c.company}</strong> &middot; ${c.execTitle} &middot; ${c.stage} &middot; ${c.product}`;
+  el.style.display = 'flex';
+}
+
+// ── Stakeholders ───────────────────────────────────────────────────────────
+function addStakeholder() {
+  if (S.stakeholders.length >= 3) return;
+  const id = Date.now();
+  S.stakeholders.push(id);
+  const list = document.getElementById('sk-list');
+  const row = document.createElement('div');
+  row.className = 'stakeholder-row';
+  row.id = 'sk-' + id;
+  row.innerHTML = `<input placeholder="Name" id="skn-${id}" /><input placeholder="Role / Title" id="skr-${id}" /><button class="remove-btn" onclick="removeSk(${id})">&#215;</button>`;
+  list.appendChild(row);
+  if (S.stakeholders.length >= 3) document.getElementById('add-sk-btn').disabled = true;
+}
+
+function removeSk(id) {
+  S.stakeholders = S.stakeholders.filter(s => s !== id);
+  document.getElementById('sk-' + id)?.remove();
+  document.getElementById('add-sk-btn').disabled = false;
+}
+
+function getSks() {
+  return S.stakeholders.map(id => ({
+    name: document.getElementById('skn-' + id)?.value || '',
+    role: document.getElementById('skr-' + id)?.value || '',
+  })).filter(s => s.name);
+}
+
+// ── Inputs ─────────────────────────────────────────────────────────────────
+function inputs() {
+  return {
+    repName: document.getElementById('rep-name').value || 'Sendbird AE',
+    execName: document.getElementById('exec-name').value || 'the executive',
+    execTitle: document.getElementById('exec-title').value || 'VP Customer Success',
+    company: document.getElementById('company-name').value || 'the account',
+    industry: document.getElementById('industry').value || 'technology',
+    objective: document.getElementById('meeting-obj').value || 'discuss our solution',
+    stage: document.getElementById('deal-stage').value,
+    product: document.getElementById('product').value || 'delight.ai AI concierge',
+    lastInteraction: document.getElementById('last-interaction').value,
+    dealNotes: document.getElementById('deal-notes').value,
+    stakeholders: getSks(),
+  };
+}
+
+// ── Claude API ─────────────────────────────────────────────────────────────
+async function claude(prompt, maxTokens = 1400) {
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, maxTokens }),
+  });
+  if (!res.ok) throw new Error('API error ' + res.status);
+  const data = await res.json();
+  return data.text;
+}
+
+function parseJSON(text) {
+  return JSON.parse(text.replace(/```json|```/g, '').trim());
+}
+
+// ── STEP 1 → 2: Account Intel ──────────────────────────────────────────────
+async function startDiscovery() {
+  const c = inputs();
+  if (!c.company || c.company === 'the account') { toast('Please enter a company name'); return; }
+  unlock(2); navTo(2); setBanner(2);
+  document.getElementById('intel-cards').innerHTML = '<div class="loading-state"><div class="spinner"></div><span>Generating account intelligence…</span></div>';
+  document.getElementById('step2-bar').style.display = 'none';
+
+  const sks = c.stakeholders.length ? `Known stakeholders: ${c.stakeholders.map(s => s.name + ' (' + s.role + ')').join(', ')}` : '';
+  const prompt = `B2B sales intelligence expert. Generate 4 intelligence cards.
+
+${SENDBIRD_CTX}
+
+Context: ${c.repName} selling ${c.product} to ${c.execName}, ${c.execTitle} at ${c.company} (${c.industry}). Objective: ${c.objective}. Stage: ${c.stage}. Last interaction: ${c.lastInteraction || 'N/A'}. Notes: ${c.dealNotes || 'None'}. ${sks}
+
+Return ONLY JSON (no fences):
+{"company_intel":{"headline":"Sharp headline about this company","signals":["signal 1","signal 2","signal 3"],"strategic_priority":"What they're focused on this year","watch_out":"One thing that could derail this deal"},"exec_profile":{"headline":"What this exec cares about most","priorities":["priority 1","priority 2","priority 3"],"communication_style":"How to engage this persona","likely_objection":"Their most likely first objection"},"industry_pulse":{"headline":"Defining trend in ${c.industry} right now","trends":[{"trend":"Trend","implication":"What it means for them"},{"trend":"Trend","implication":"What it means"},{"trend":"Trend","implication":"What it means"}]},"account_health":{"headline":"Account health summary","indicators":[{"label":"indicator","status":"positive|neutral|risk","detail":"detail"},{"label":"indicator","status":"positive|neutral|risk","detail":"detail"},{"label":"indicator","status":"positive|neutral|risk","detail":"detail"}]}}`;
+
+  try {
+    const data = parseJSON(await claude(prompt, 1400));
+    S.intelCards = data;
+    renderIntel(data);
+    document.getElementById('step2-bar').style.display = 'flex';
+  } catch(e) {
+    document.getElementById('intel-cards').innerHTML = `<div class="error-msg">Error: ${e.message}</div>`;
+  }
+}
+
+function renderIntel(data) {
+  const cards = [
+    { key: 'company_intel', title: 'Company intel', render: d => `<div class="section-label">Signals</div>${(d.signals||[]).map(s=>`<p>&#8226; ${s}</p>`).join('')}<div class="section-label">Strategic priority</div><p>${d.strategic_priority||''}</p><div class="section-label">Watch out</div><p style="color:var(--danger)">${d.watch_out||''}</p>` },
+    { key: 'exec_profile', title: 'Exec &amp; buyer profile', render: d => `<div class="section-label">Priorities</div>${(d.priorities||[]).map(p=>`<p>&#8226; ${p}</p>`).join('')}<div class="section-label">Communication style</div><p>${d.communication_style||''}</p><div class="section-label">Likely first objection</div><p style="color:var(--accent)">"${d.likely_objection||''}"</p>` },
+    { key: 'industry_pulse', title: 'Industry pulse', render: d => (d.trends||[]).map(t=>`<div style="margin-bottom:10px"><p style="font-weight:600;color:var(--text)">&#8599; ${t.trend}</p><p>${t.implication}</p></div>`).join('') },
+    { key: 'account_health', title: 'Account health signals', render: d => (d.indicators||[]).map(i=>`<div class="signal-item"><div class="signal-dot ${i.status==='positive'?'green':i.status==='risk'?'red':'amber'}"></div><div><div class="signal-title">${i.label}</div><div class="signal-detail">${i.detail}</div></div></div>`).join('') },
+  ];
+  const html = `<div class="grid-2">${cards.map(c => `
+    <div class="card collapsed" id="ic-${c.key}">
+      <div class="card-header">
+        <div><div class="card-title">${c.title}</div><div class="card-subtitle">${data[c.key]?.headline||''}</div></div>
+        <div class="card-actions">
+          <button class="refresh-badge" onclick="startDiscovery()">&#8635;</button>
+          <button class="btn-teal ${S.pinnedCards.has(c.key)?'active':''}" id="pin-${c.key}" onclick="togglePin('${c.key}')">
+            ${S.pinnedCards.has(c.key)?'Pinned':'Pin'}
+          </button>
+        </div>
+      </div>
+      <div class="card-full card-body">${c.render(data[c.key]||{})}</div>
+      <button class="expand-toggle" onclick="toggleCard('ic-${c.key}',this)">Show more &#8595;</button>
+    </div>`).join('')}</div>`;
+  document.getElementById('intel-cards').innerHTML = html;
+}
+
+function toggleCard(id, btn) {
+  const card = document.getElementById(id);
+  card.classList.toggle('collapsed');
+  btn.textContent = card.classList.contains('collapsed') ? 'Show more ↓' : 'Show less ↑';
+}
+
+function togglePin(key) {
+  S.pinnedCards.has(key) ? S.pinnedCards.delete(key) : S.pinnedCards.add(key);
+  const btn = document.getElementById('pin-' + key);
+  const card = document.getElementById('ic-' + key);
+  if (btn) { btn.textContent = S.pinnedCards.has(key) ? 'Pinned' : 'Pin'; btn.classList.toggle('active', S.pinnedCards.has(key)); }
+  if (card) card.classList.toggle('pinned', S.pinnedCards.has(key));
+}
+
+// ── STEP 2 → 3: Angles ────────────────────────────────────────────────────
+async function goToAngles() {
+  unlock(3); markDone(2); navTo(3); setBanner(3);
+  S.selectedAngles.clear();
+  document.getElementById('angles-grid').innerHTML = '<div class="loading-state"><div class="spinner"></div><span>Brainstorming meeting angles…</span></div>';
+  document.getElementById('step3-bar').style.display = 'none';
+
+  const c = inputs();
+  const intel = JSON.stringify(S.intelCards).slice(0,700);
+  const prompt = `B2B sales expert. Generate 6 meeting angle cards for this opportunity.
+
+${SENDBIRD_CTX}
+
+Context: ${c.product} to ${c.execTitle} at ${c.company} (${c.industry}). Objective: ${c.objective}. Stage: ${c.stage}. Intel: ${intel}
+
+Return ONLY JSON array (no fences):
+[{"title":"Angle title (max 7 words)","why_it_matters":"Why this resonates for ${c.execTitle} (1 sentence)","your_hook":"How ${c.product} connects (1 sentence)","tags":["strategic|risk|growth|retention|cost — pick 2"]}]`;
+
+  try {
+    S.angles = parseJSON(await claude(prompt, 900));
+    renderAngles();
+    document.getElementById('step3-bar').style.display = 'flex';
+  } catch(e) {
+    document.getElementById('angles-grid').innerHTML = `<div class="error-msg">Error: ${e.message}</div>`;
+  }
+}
+
+function renderAngles() {
+  const tagColors = { strategic:'tag-teal', risk:'tag-red', growth:'tag-green', retention:'tag-amber', cost:'tag-gray' };
+  document.getElementById('angles-grid').innerHTML = `<div class="grid-3" style="margin-bottom:14px;">${S.angles.map((a,i) => `
+    <div class="angle-card" id="ang-${i}" onclick="toggleAngle(${i})">
+      <h4>${a.title}</h4>
+      <div class="angle-why">${a.why_it_matters}</div>
+      <div class="angle-hook">&#8594; ${a.your_hook}</div>
+      <div class="tags">${(a.tags||[]).map(t=>`<span class="tag ${tagColors[t.toLowerCase()]||'tag-gray'}">${t}</span>`).join('')}</div>
+    </div>`).join('')}</div>`;
+}
+
+function toggleAngle(i) {
+  if (S.selectedAngles.has(i)) { S.selectedAngles.delete(i); }
+  else if (S.selectedAngles.size < 3) { S.selectedAngles.add(i); }
+  else { toast('Max 3 angles. Deselect one first.'); return; }
+  document.querySelectorAll('.angle-card').forEach((el, idx) => el.classList.toggle('selected', S.selectedAngles.has(idx)));
+  document.getElementById('angle-count').textContent = S.selectedAngles.size + ' selected';
+  document.getElementById('build-btn').disabled = S.selectedAngles.size === 0;
+}
+
+// ── STEP 3 → Wave ──────────────────────────────────────────────────────────
+function buildWave() {
+  ['s1','s2','s3','s4','s5','s6'].forEach(sid => unlockSec(sid));
+  unlock(5);
+  markDone(3);
+  const c = inputs();
+  document.getElementById('coco-trigger').style.display = 'flex';
+  document.getElementById('coco-sub').textContent = c.company + ' · ' + c.execTitle;
+  goSection('s1');
+}
+
+// ── Base context for all sections ──────────────────────────────────────────
+function dealBase() {
+  const c = inputs();
+  const chosen = [...S.selectedAngles].map(i => S.angles[i]);
+  const angles = chosen.map(a => `- ${a.title}: ${a.why_it_matters}`).join('\n');
+  const intel = JSON.stringify(S.intelCards).slice(0, 600);
+  return { c, base: `${SENDBIRD_CTX}\n\nOpportunity:\n- Product: ${c.product}\n- Rep: ${c.repName}\n- Meeting: ${c.execName}, ${c.execTitle} at ${c.company} (${c.industry})\n- Objective: ${c.objective}\n- Stage: ${c.stage}\n- Angles:\n${angles}\n- Intel: ${intel}\n- Notes: ${c.dealNotes||'None'}` };
+}
+
+// ── Section generator ──────────────────────────────────────────────────────
+async function genSection(sid) {
+  S.sectionDone.add(sid);
+  const { c, base } = dealBase();
+
+  const cfg = {
+    s1: {
+      el: 'bp-content', bar: 's1-bar', tokens: 1100,
+      prompt: `${base}\n\nGenerate The Big Picture. Return ONLY JSON (no fences):\n{"headline":"High-stakes single sentence — cost of inaction for ${c.company} if they don't act","why_change":{"title":"[Their status quo problem]","bullets":["pressure 1","pressure 2","pressure 3"]},"why_now":{"title":"[External urgency factor]","bullets":["urgency 1","urgency 2","urgency 3"]},"why_us":{"title":"[Sendbird's key differentiator for this buyer]","bullets":["proof point 1","proof point 2","proof point 3"]}}`,
+      render: renderBigPicture,
+    },
+    s2: {
+      el: 'pitch-content', bar: 's2-bar', tokens: 900,
+      prompt: `${base}\n\nGenerate Your Pitch (Now vs. Next). Return ONLY JSON (no fences):\n{"shared_reality":{"label":"What Is","description":"Vivid 2-3 sentence description of ${c.execTitle} current reality at ${c.company}"},"vision":{"label":"What Could Be","description":"2-3 sentence future state after solving the problem"},"bridge":{"label":"How We Get There","description":"2-3 sentences on how ${c.product} closes the gap for ${c.company}"}}`,
+      render: renderPitch,
+    },
+    s3: {
+      el: 'email-content', bar: 's3-bar', tokens: 900,
+      prompt: `${base}\n\nWrite 2 outbound emails. Under 150 words each. Return ONLY JSON (no fences):\n{"email1":{"type":"Problem, Agitate, Solve","subject":"subject line","body":"email body — lead with pain, amplify urgency, present Sendbird solution, reference real context about ${c.company}"},"email2":{"type":"Why You, Why Now","subject":"subject line","body":"email body — lead with external trigger in ${c.industry}, connect to ${c.execTitle} priorities at ${c.company}"}}`,
+      render: renderEmails,
+    },
+    s4: {
+      el: 'disc-content', bar: 's4-bar', tokens: 1000,
+      prompt: `${base}\n\nGenerate 6 discovery questions (2 why_change, 2 why_now, 2 why_us). Return ONLY JSON array (no fences):\n[{"type":"why_change|why_now|why_us","question":"Natural insight-led question for ${c.execTitle} at ${c.company}","strategic_note":"Why this question matters strategically"}]`,
+      render: renderDiscovery,
+    },
+    s5: {
+      el: 'obj-content', bar: 's5-bar', tokens: 1200,
+      prompt: `${base}\n\nIdentify top 5 objections a ${c.execTitle} at a ${c.industry} company will raise. Return ONLY JSON array (no fences):\n[{"name":"Catchy objection name","objection":"The objection as they would say it","response_strategy":"2-3 sentence response strategy for this specific buyer"}]`,
+      render: renderObjections,
+    },
+    s6: {
+      el: 'smap-content', bar: 's6-bar', tokens: 1200,
+      prompt: `${base}\n\nMap 4-5 key stakeholders for this deal at ${c.company}. Return ONLY JSON array (no fences):\n[{"role":"economic_buyer|technical_buyer|champion|blocker|influencer","likely_title":"Probable title at ${c.company}","priorities":["priority 1","priority 2"],"concerns":"Main concern about this deal","how_to_engage":"1-2 sentence engagement strategy"}]`,
+      render: renderSmap,
+    },
+  };
+
+  const cf = cfg[sid];
+  if (!cf) return;
+  const container = document.getElementById(cf.el);
+  const bar = document.getElementById(cf.bar);
+
+  try {
+    const text = await claude(cf.prompt, cf.tokens);
+    const data = parseJSON(text);
+    S.sectionData[sid] = data;
+    container.innerHTML = cf.render(data, c);
+    if (bar) bar.style.display = 'flex';
+  } catch(e) {
+    container.innerHTML = `<div class="error-msg">Error generating section: ${e.message}</div>`;
+  }
+}
+
+// ── Section renderers ──────────────────────────────────────────────────────
+function renderBigPicture(d) {
+  return `<div class="big-headline">${d.headline||''}</div>
+  <div class="why-grid">
+    <div class="why-card"><div class="why-label change">Why Change</div><h4>${d.why_change?.title||''}</h4><ul>${(d.why_change?.bullets||[]).map(b=>`<li>${b}</li>`).join('')}</ul></div>
+    <div class="why-card"><div class="why-label now">Why Now</div><h4>${d.why_now?.title||''}</h4><ul>${(d.why_now?.bullets||[]).map(b=>`<li>${b}</li>`).join('')}</ul></div>
+    <div class="why-card"><div class="why-label us">Why Us</div><h4>${d.why_us?.title||''}</h4><ul>${(d.why_us?.bullets||[]).map(b=>`<li>${b}</li>`).join('')}</ul></div>
+  </div>`;
+}
+
+function renderPitch(d) {
+  return `<div class="pitch-arc">
+    ${[d.shared_reality,d.vision,d.bridge].filter(Boolean).map((b,i)=>`<div class="pitch-block"><div class="pitch-block-num">0${i+1}</div><div class="pitch-block-title">${b.label||''}</div><div class="pitch-block-body">${b.description||''}</div></div>`).join('')}
+  </div>`;
+}
+
+function renderEmails(d) {
+  return [d.email1,d.email2].filter(Boolean).map(e=>`
+    <div class="email-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div class="email-label">${e.type||''}</div>
+        <button class="btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="copyText('${(e.subject+'\\n\\n'+e.body).replace(/'/g,"\\'")}')">Copy</button>
+      </div>
+      <div class="email-subject">Subject: ${e.subject||''}</div>
+      <div class="email-body">${e.body||''}</div>
+    </div>`).join('');
+}
+
+function renderDiscovery(d) {
+  const arr = Array.isArray(d) ? d : [];
+  const tagCls = { why_change:'change', why_now:'now', why_us:'us' };
+  const tagLbl = { why_change:'Why Change', why_now:'Why Now', why_us:'Why Us' };
+  return arr.map(q=>`
+    <div class="disc-q">
+      <div class="disc-q-top">
+        <span class="disc-tag ${tagCls[q.type]||'change'}">${tagLbl[q.type]||q.type}</span>
+        <div class="disc-q-text">${q.question||''}</div>
+      </div>
+      <div class="disc-q-why">Why this matters: ${q.strategic_note||''}</div>
+    </div>`).join('');
+}
+
+function renderObjections(d) {
+  const arr = Array.isArray(d) ? d : [];
+  return arr.map(o=>`
+    <div class="obj-card">
+      <div class="obj-name">${o.name||''}</div>
+      <div class="obj-quote">"${o.objection||''}"</div>
+      <div class="obj-strat-label">Response strategy</div>
+      <div class="obj-strat">${o.response_strategy||''}</div>
+    </div>`).join('');
+}
+
+function renderSmap(d) {
+  const arr = Array.isArray(d) ? d : [];
+  const roleColors = { economic_buyer:'var(--accent)', champion:'var(--accent2)', technical_buyer:'#ffc107', blocker:'var(--danger)', influencer:'var(--text2)' };
+  const roleLabels = { economic_buyer:'Economic Buyer', champion:'Champion', technical_buyer:'Technical Buyer', blocker:'Blocker', influencer:'Influencer' };
+  return `<div class="smap-grid">${arr.map(p=>`
+    <div class="persona-card">
+      <div class="persona-role-label" style="color:${roleColors[p.role]||'var(--text3)'}">${roleLabels[p.role]||p.role}</div>
+      <div class="persona-title">${p.likely_title||''}</div>
+      <div class="persona-row"><div class="persona-row-label">Priorities</div>${(p.priorities||[]).map(pr=>`<p>&#8226; ${pr}</p>`).join('')}</div>
+      <div class="persona-row"><div class="persona-row-label">Main concern</div><p>${p.concerns||''}</p></div>
+      <div class="persona-row"><div class="persona-row-label">How to engage</div><p>${p.how_to_engage||''}</p></div>
+    </div>`).join('')}</div>`;
+}
+
+// ── Prep Doc ───────────────────────────────────────────────────────────────
+function buildDoc() {
+  setBanner(5);
+  const c = inputs();
+  const sd = S.sectionData;
+  const bp = sd.s1; const pitch = sd.s2; const emails = sd.s3;
+  const disc = sd.s4; const obj = sd.s5; const smap = sd.s6;
+  const angles = [...S.selectedAngles].map(i => S.angles[i]?.title).join(', ');
+  const pinned = [...S.pinnedCards].map(k => S.intelCards[k]?.headline ? `[${k.replace('_',' ').toUpperCase()}] ${S.intelCards[k].headline}` : '').filter(Boolean).join('\n');
+
+  const doc = `MEETING PREP — ${c.company.toUpperCase()}
+${c.execName} · ${c.execTitle} · ${c.stage}
+${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}
+Product: ${c.product}  |  Objective: ${c.objective}
+${'─'.repeat(44)}
+${pinned?`PINNED INTEL\n${pinned}\n${'─'.repeat(44)}\n`:''}SELECTED ANGLES
+${angles||'N/A'}
+
+${'─'.repeat(44)}
+THE BIG PICTURE
+
+${bp?.headline||''}
+
+Why Change: ${bp?.why_change?.title||''}
+${(bp?.why_change?.bullets||[]).map(b=>`• ${b}`).join('\n')}
+
+Why Now: ${bp?.why_now?.title||''}
+${(bp?.why_now?.bullets||[]).map(b=>`• ${b}`).join('\n')}
+
+Why Us: ${bp?.why_us?.title||''}
+${(bp?.why_us?.bullets||[]).map(b=>`• ${b}`).join('\n')}
+
+${'─'.repeat(44)}
+YOUR PITCH
+
+${pitch?.shared_reality?.label||'What Is'}:
+${pitch?.shared_reality?.description||''}
+
+${pitch?.vision?.label||'What Could Be'}:
+${pitch?.vision?.description||''}
+
+${pitch?.bridge?.label||'How We Get There'}:
+${pitch?.bridge?.description||''}
+
+${'─'.repeat(44)}
+DISCOVERY QUESTIONS
+
+${(Array.isArray(disc)?disc:[]).map((q,i)=>`Q${i+1} [${(q.type||'').replace('_',' ')}]: ${q.question}\n   → ${q.strategic_note}`).join('\n\n')}
+
+${'─'.repeat(44)}
+RISKS & OBJECTIONS
+
+${(Array.isArray(obj)?obj:[]).map(o=>`"${o.objection}"\n→ ${o.response_strategy}`).join('\n\n')}
+
+${'─'.repeat(44)}
+STAKEHOLDER MAP
+
+${(Array.isArray(smap)?smap:[]).map(p=>`${(p.role||'').toUpperCase().replace('_',' ')}: ${p.likely_title}\nPriorities: ${(p.priorities||[]).join(', ')}\nEngage: ${p.how_to_engage}`).join('\n\n')}
+
+${'─'.repeat(44)}
+OUTBOUND EMAILS
+
+[EMAIL 1 — ${emails?.email1?.type||''}]
+Subject: ${emails?.email1?.subject||''}
+${emails?.email1?.body||''}
+
+[EMAIL 2 — ${emails?.email2?.type||''}]
+Subject: ${emails?.email2?.subject||''}
+${emails?.email2?.body||''}`;
+
+  S.prepDoc = doc;
+  document.getElementById('doc-content').innerHTML = `<div class="output-doc">${esc(doc)}</div>`;
+}
+
+function esc(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function copyDoc() {
+  if (!S.prepDoc) return;
+  navigator.clipboard.writeText(S.prepDoc).then(() => toast('Prep doc copied!'));
+}
+
+function copyText(t) {
+  navigator.clipboard.writeText(t).then(() => toast('Copied!'));
+}
+
+// ── Signals ────────────────────────────────────────────────────────────────
+async function checkSignals() {
+  const c = inputs();
+  document.getElementById('signals-section').style.display = 'block';
+  document.getElementById('signals-content').innerHTML = '<div class="loading-state"><div class="spinner"></div></div>';
+
+  const prompt = `B2B sales intelligence. Generate 4 current signal items about ${c.company} (${c.industry}) that a rep should know. Return ONLY JSON array (no fences):
+[{"title":"Signal headline","detail":"2 sentences on why this matters for a sales conversation","type":"positive|neutral|risk","time":"e.g. 2 days ago"}]`;
+
+  try {
+    const signals = parseJSON(await claude(prompt, 700));
+    document.getElementById('signals-content').innerHTML = signals.map(s=>`
+      <div class="signal-item">
+        <div class="signal-dot ${s.type==='positive'?'green':s.type==='risk'?'red':'amber'}"></div>
+        <div><div class="signal-title">${s.title}</div><div class="signal-detail">${s.detail}</div><div class="signal-time">${s.time}</div></div>
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('signals-content').innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+// ── Ask Coco ───────────────────────────────────────────────────────────────
+function openCoco() {
+  document.getElementById('coco-panel').classList.remove('hidden');
+  document.getElementById('coco-trigger').style.display = 'none';
+  document.getElementById('coco-input').focus();
+}
+
+function closeCoco() {
+  document.getElementById('coco-panel').classList.add('hidden');
+  document.getElementById('coco-trigger').style.display = 'flex';
+}
+
+async function sendCoco() {
+  const input = document.getElementById('coco-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  addMsg('user', msg);
+  addMsg('assistant', '…', 'thinking');
+
+  const c = inputs();
+  const deal = `Company: ${c.company} | Buyer: ${c.execTitle} | Product: ${c.product} | Stage: ${c.stage} | Objective: ${c.objective}`;
+  const sections = Object.entries(S.sectionData).map(([k,v]) => `${k}: ${JSON.stringify(v).slice(0,250)}`).join('\n');
+
+  S.cocoHistory.push({ role: 'user', content: msg });
+
+  const sys = `You are Coco, a strategic sales assistant for Sendbird reps. You know everything about the current deal and have full context. Be concise, direct, and practical. Help with emails, objections, pitch rewrites, follow-ups, stakeholder strategies, LinkedIn messages, or any deal question.
+
+${SENDBIRD_CTX}
+
+Current deal:
+${deal}
+
+Generated content:
+${sections}`;
+
+  try {
+    const reply = await claude(sys + '\n\nConversation:\n' + S.cocoHistory.map(m => m.role + ': ' + m.content).join('\n') + '\nassistant:', 700);
+    S.cocoHistory.push({ role: 'assistant', content: reply });
+    removeThinking();
+    addMsg('assistant', reply);
+  } catch(e) {
+    removeThinking();
+    addMsg('assistant', 'Error: ' + e.message);
+  }
+}
+
+function addMsg(role, text, cls = '') {
+  const msgs = document.getElementById('coco-msgs');
+  const div = document.createElement('div');
+  div.className = `coco-msg ${role} ${cls}`;
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeThinking() {
+  document.getElementById('coco-msgs').querySelector('.thinking')?.remove();
+}
+
+// ── Sendbird Config ────────────────────────────────────────────────────────
+function openCtx() { document.getElementById('ctx-panel').style.display = 'flex'; }
+function closeCtx() { document.getElementById('ctx-panel').style.display = 'none'; }
+function saveCtx() {
+  SENDBIRD_CTX = document.getElementById('sb-context-input').value;
+  closeCtx();
+  toast('Context saved');
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>

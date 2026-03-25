@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account Plan — Sendbird</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0a; --bg2:#111111; --bg3:#181818; --bg4:#202020;
+  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.12);
+  --accent:#BFFF58; --accent2:#9FE1CB; --amber:#ffc107;
+  --text:#f0f0f0; --text2:#999; --text3:#555; --danger:#ff6b6b;
+  --radius:10px; --radius-lg:16px;
+  --font:'Syne',sans-serif; --mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;min-height:100vh;line-height:1.6;}
+
+/* ── Mode toggle bar ── */
+.mode-bar{position:fixed;top:0;left:0;right:0;height:44px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:0;z-index:100;}
+.mode-btn{padding:6px 18px;font-size:13px;font-weight:600;font-family:var(--font);border:none;background:transparent;color:var(--text2);cursor:pointer;border-radius:var(--radius);transition:all 0.15s;text-decoration:none;display:flex;align-items:center;gap:6px;}
+.mode-btn:hover{color:var(--text);background:var(--bg3);}
+.mode-btn.active{color:var(--accent);background:rgba(191,255,88,0.08);}
+.mode-divider{width:1px;height:20px;background:var(--border2);margin:0 8px;}
+.mode-account{font-size:12px;color:var(--text3);font-family:var(--mono);margin-left:auto;}
+
+/* ── Layout ── */
+.shell{display:flex;min-height:100vh;padding-top:44px;}
+.sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);padding:20px 14px;display:flex;flex-direction:column;position:sticky;top:44px;height:calc(100vh - 44px);overflow-y:auto;}
+.logo{font-size:11px;font-weight:700;letter-spacing:0.08em;color:var(--accent);text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:7px;}
+.logo-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+.plan-account-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.plan-meta{font-size:11px;color:var(--text3);margin-bottom:18px;font-family:var(--mono);}
+
+.nav-group{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;margin-top:14px;padding-left:4px;}
+.nav-item{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:var(--radius);font-size:12px;color:var(--text2);cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-family:var(--font);transition:all 0.15s;margin-bottom:1px;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:var(--bg4);color:var(--text);}
+.nav-item .n-num{font-family:var(--mono);font-size:10px;width:16px;text-align:center;flex-shrink:0;color:var(--text3);}
+.nav-item.active .n-num{color:var(--accent);}
+.nav-item.generated .n-num{color:var(--accent2);}
+.nav-item.has-data::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent2);margin-left:auto;flex-shrink:0;}
+.sidebar-actions{margin-top:auto;padding-top:14px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px;}
+
+/* ── Main ── */
+.main{flex:1;padding:32px 44px;max-width:920px;}
+
+/* ── Section ── */
+.section{display:none;}
+.section.active{display:block;}
+.section-header{margin-bottom:26px;}
+.section-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:8px;}
+.section-tag .s-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);}
+h1{font-size:24px;font-weight:700;color:var(--text);line-height:1.2;margin-bottom:5px;}
+.section-desc{font-size:13px;color:var(--text2);}
+
+/* ── Generate bar ── */
+.gen-bar{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:20px;}
+.gen-bar-left{display:flex;align-items:center;gap:10px;}
+.gen-bar-status{font-size:12px;color:var(--text2);}
+.gen-bar-status.done{color:var(--accent2);}
+.gen-bar-status.loading{color:var(--amber);}
+.gen-bar-right{display:flex;gap:8px;}
+.last-updated{font-size:11px;color:var(--text3);font-family:var(--mono);}
+
+/* ── Editable fields ── */
+.plan-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:0;margin-bottom:14px;overflow:hidden;}
+.plan-section-header{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);cursor:pointer;}
+.plan-section-header:hover{background:var(--bg3);}
+.plan-section-title{font-size:13px;font-weight:600;color:var(--text);}
+.plan-section-chevron{color:var(--text3);font-size:11px;transition:transform 0.15s;}
+.plan-section.open .plan-section-chevron{transform:rotate(180deg);}
+.plan-section-body{padding:18px;display:none;}
+.plan-section.open .plan-section-body{display:block;}
+
+/* ── Field types ── */
+.field-group{margin-bottom:16px;}
+.field-label{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;display:flex;align-items:center;gap:6px;}
+.field-label .ai-badge{font-size:9px;background:rgba(191,255,88,0.1);color:var(--accent);padding:1px 6px;border-radius:4px;letter-spacing:0.04em;}
+.editable-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;font-family:var(--font);padding:9px 12px;outline:none;transition:border-color 0.15s;resize:none;}
+.editable-input:focus{border-color:var(--accent2);}
+.editable-input.tall{min-height:80px;}
+.editable-input.xtall{min-height:120px;}
+.field-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* ── Tables ── */
+.plan-table{width:100%;border-collapse:collapse;font-size:12px;}
+.plan-table th{text-align:left;padding:8px 10px;font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);}
+.plan-table td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top;}
+.plan-table td input,.plan-table td textarea{background:transparent;border:none;color:var(--text);font-size:12px;font-family:var(--font);width:100%;outline:none;padding:2px 0;resize:none;}
+.plan-table td input:focus,.plan-table td textarea:focus{border-bottom:1px solid var(--accent2);}
+.plan-table tr:hover td{background:rgba(255,255,255,0.02);}
+.add-row-btn{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:var(--font);padding:6px 0;display:flex;align-items:center;gap:5px;transition:color 0.15s;margin-top:4px;}
+.add-row-btn:hover{color:var(--accent2);}
+
+/* ── Stakeholder cards ── */
+.stakeholder-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.sk-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;}
+.sk-card.engaged{border-color:var(--accent2);}
+.sk-card.met{border-color:var(--amber);}
+.sk-card.not-engaged{border-color:var(--border);}
+.sk-role-badge{font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:4px;display:inline-block;margin-bottom:6px;}
+.badge-eb{background:rgba(191,255,88,0.12);color:var(--accent);}
+.badge-champion{background:rgba(159,225,203,0.12);color:var(--accent2);}
+.badge-tdm{background:rgba(255,193,7,0.12);color:var(--amber);}
+.badge-influencer{background:rgba(255,255,255,0.06);color:var(--text2);}
+.badge-blocker{background:rgba(255,107,107,0.12);color:var(--danger);}
+.sk-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.sk-title{font-size:11px;color:var(--text2);margin-bottom:8px;}
+.sk-field{font-size:11px;color:var(--text3);margin-bottom:4px;}
+.sk-input{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text2);font-size:11px;font-family:var(--font);padding:2px 0;outline:none;}
+.sk-input:focus{border-bottom-color:var(--accent2);}
+.sk-engagement{display:flex;gap:4px;margin-top:8px;}
+.sk-eng-btn{font-size:9px;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font);}
+.sk-eng-btn.active-engaged{background:rgba(159,225,203,0.15);color:var(--accent2);border-color:var(--accent2);}
+.sk-eng-btn.active-met{background:rgba(255,193,7,0.12);color:var(--amber);border-color:var(--amber);}
+.sk-eng-btn.active-not{background:rgba(255,255,255,0.04);color:var(--text3);border-color:var(--border);}
+
+/* ── MEDDPICC ── */
+.medd-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.medd-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;}
+.medd-label{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.medd-letter{font-size:18px;font-weight:700;color:var(--accent);font-family:var(--mono);width:24px;}
+.medd-title{font-size:13px;font-weight:600;color:var(--text);}
+.medd-sub{font-size:11px;color:var(--text3);margin-bottom:8px;}
+.medd-status{display:flex;gap:5px;margin-top:8px;}
+.medd-status-btn{font-size:10px;padding:2px 8px;border-radius:4px;border:none;cursor:pointer;font-family:var(--font);}
+.medd-r{background:rgba(255,107,107,0.15);color:var(--danger);}
+.medd-y{background:rgba(255,193,7,0.15);color:var(--amber);}
+.medd-g{background:rgba(191,255,88,0.12);color:var(--accent);}
+.medd-r.sel{background:var(--danger);color:#000;}
+.medd-y.sel{background:var(--amber);color:#000;}
+.medd-g.sel{background:var(--accent);color:#000;}
+
+/* ── Value pyramid ── */
+.pyramid-stack{display:flex;flex-direction:column;gap:0;}
+.pyramid-level{padding:16px 20px;border-left:3px solid transparent;margin-bottom:8px;border-radius:0 var(--radius) var(--radius) 0;background:var(--bg3);}
+.pyramid-level.goals{border-left-color:var(--accent);}
+.pyramid-level.strategies{border-left-color:var(--accent2);}
+.pyramid-level.initiatives{border-left-color:var(--amber);}
+.pyramid-level.obstacles{border-left-color:var(--danger);}
+.pyramid-level.needs{border-left-color:#a78bfa;}
+.pyramid-level-label{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
+.pyramid-level.goals .pyramid-level-label{color:var(--accent);}
+.pyramid-level.strategies .pyramid-level-label{color:var(--accent2);}
+.pyramid-level.initiatives .pyramid-level-label{color:var(--amber);}
+.pyramid-level.obstacles .pyramid-level-label{color:var(--danger);}
+.pyramid-level.needs .pyramid-level-label{color:#a78bfa;}
+
+/* ── Stories ── */
+.stories-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px;}
+.story-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;}
+.story-num{font-size:22px;font-weight:700;color:var(--accent);margin-bottom:4px;font-family:var(--mono);}
+.story-card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.story-card-sub{font-size:11px;color:var(--text3);font-style:italic;margin-bottom:10px;}
+.story-bullet-row{display:flex;gap:6px;align-items:flex-start;margin-bottom:8px;}
+.story-bullet-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px;}
+.story-bullet-label{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:2px;}
+
+/* ── ROI ── */
+.roi-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px;}
+.roi-metric{background:var(--bg3);border-radius:var(--radius);padding:14px;text-align:center;}
+.roi-metric-val{font-size:20px;font-weight:700;color:var(--accent);font-family:var(--mono);}
+.roi-metric-label{font-size:10px;color:var(--text3);margin-top:3px;}
+
+/* ── Risks ── */
+.risk-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:10px;display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:start;}
+.risk-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.risk-desc{font-size:12px;color:var(--text2);line-height:1.5;}
+.risk-likelihood{text-align:center;}
+.risk-lik-label{font-size:10px;color:var(--text3);margin-bottom:4px;}
+.risk-lik-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;}
+.lik-h{background:rgba(255,107,107,0.15);color:var(--danger);}
+.lik-m{background:rgba(255,193,7,0.12);color:var(--amber);}
+.lik-l{background:rgba(191,255,88,0.1);color:var(--accent);}
+.risk-mitigation{font-size:12px;color:var(--text2);line-height:1.5;}
+
+/* ── Current / Future state ── */
+.cf-table{width:100%;border-collapse:collapse;}
+.cf-table th{text-align:left;padding:10px 14px;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.cf-table th.current{color:var(--danger);}
+.cf-table th.future{color:var(--accent2);}
+.cf-table td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top;}
+.cf-table td textarea{width:100%;background:transparent;border:none;color:var(--text2);font-size:12px;font-family:var(--font);resize:none;outline:none;min-height:50px;}
+.cf-table td textarea:focus{color:var(--text);}
+.cf-category{font-size:12px;font-weight:600;color:var(--text3);}
+
+/* ── Buttons ── */
+.btn-primary{background:var(--accent);color:#000;border:none;padding:9px 20px;border-radius:var(--radius);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:7px;}
+.btn-primary:hover{background:#d4ff6a;}
+.btn-primary:disabled{background:var(--bg4);color:var(--text3);cursor:not-allowed;}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2);padding:7px 14px;border-radius:var(--radius);font-size:12px;font-family:var(--font);cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-ghost:hover{background:var(--bg3);color:var(--text);}
+.btn-ghost:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-danger{background:transparent;color:var(--danger);border:1px solid rgba(255,107,107,0.3);padding:7px 14px;border-radius:var(--radius);font-size:12px;font-family:var(--font);cursor:pointer;}
+
+/* ── Misc ── */
+.loading-state{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:var(--text2);font-size:13px;}
+.spinner{width:22px;height:22px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.error-msg{color:var(--danger);font-size:12px;padding:8px 0;}
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--accent);color:#000;padding:8px 18px;border-radius:var(--radius);font-size:13px;font-weight:700;opacity:0;transition:all 0.2s;z-index:999;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.update-banner{background:rgba(191,255,88,0.06);border:1px solid rgba(191,255,88,0.2);border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--accent2);margin-bottom:16px;display:none;align-items:center;justify-content:space-between;gap:10px;}
+.update-banner.show{display:flex;}
+</style>
+</head>
+<body>
+
+<!-- Mode toggle bar -->
+<div class="mode-bar">
+  <a href="index.html" class="mode-btn">&#9673; Meeting Prep</a>
+  <div class="mode-divider"></div>
+  <a href="account-plan.html" class="mode-btn active">&#9632; Account Plan</a>
+  <div class="mode-account" id="mode-account-label"></div>
+</div>
+
+<div class="shell">
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="logo"><div class="logo-dot"></div>Account Plan</div>
+  <div class="plan-account-name" id="sb-account-name">New Account</div>
+  <div class="plan-meta" id="sb-plan-meta">FY27 · Not saved</div>
+
+  <div class="nav-group">Intelligence</div>
+  <button class="nav-item active" id="nav-setup" onclick="goTo('setup')"><span class="n-num">00</span> Setup</button>
+  <button class="nav-item" id="nav-intel" onclick="goTo('intel')"><span class="n-num">01</span> Account Intelligence</button>
+  <button class="nav-item" id="nav-smap" onclick="goTo('smap')"><span class="n-num">02</span> Stakeholder Map</button>
+
+  <div class="nav-group">Narrative</div>
+  <button class="nav-item" id="nav-stories" onclick="goTo('stories')"><span class="n-num">03</span> 3 Stories + Hypothesis</button>
+  <button class="nav-item" id="nav-pyramid" onclick="goTo('pyramid')"><span class="n-num">04</span> Value Pyramid</button>
+  <button class="nav-item" id="nav-cfstate" onclick="goTo('cfstate')"><span class="n-num">05</span> Current vs. Future State</button>
+
+  <div class="nav-group">Qualification</div>
+  <button class="nav-item" id="nav-meddpicc" onclick="goTo('meddpicc')"><span class="n-num">06</span> MEDDPICC</button>
+  <button class="nav-item" id="nav-roi" onclick="goTo('roi')"><span class="n-num">07</span> ROI &amp; Business Case</button>
+  <button class="nav-item" id="nav-risks" onclick="goTo('risks')"><span class="n-num">08</span> Risks &amp; Gaps</button>
+
+  <div class="sidebar-actions">
+    <button class="btn-ghost" onclick="saveAll()" style="width:100%;justify-content:center;">&#10003; Save plan</button>
+    <button class="btn-ghost" onclick="exportDoc()" style="width:100%;justify-content:center;">&#8599; Export to Google Doc</button>
+    <button class="btn-ghost" onclick="checkForUpdates()" style="width:100%;justify-content:center;">&#8635; Check for updates</button>
+  </div>
+</nav>
+
+<!-- Main content -->
+<main class="main">
+
+<!-- UPDATE BANNER -->
+<div class="update-banner" id="update-banner">
+  <span id="update-banner-text">New signals found for this account.</span>
+  <div style="display:flex;gap:8px;">
+    <button class="btn-primary" style="font-size:11px;padding:5px 12px;" onclick="applyUpdates()">Review updates</button>
+    <button class="btn-ghost" style="font-size:11px;padding:5px 12px;" onclick="dismissUpdate()">Dismiss</button>
+  </div>
+</div>
+
+<!-- SECTION 00: SETUP -->
+<div class="section active" id="sec-setup">
+  <div class="section-header">
+    <div class="section-tag"><div class="s-dot"></div>Account Plan — Setup</div>
+    <h1>Start your account plan</h1>
+    <p class="section-desc">Enter the account details. Claude will use web search to generate a first pass for every section.</p>
+  </div>
+
+  <div class="plan-section open">
+    <div class="plan-section-body" style="display:block;">
+      <div class="field-row-2">
+        <div class="field-group">
+          <div class="field-label">Company name *</div>
+          <input class="editable-input" id="setup-company" placeholder="e.g. Alaska Airlines" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Industry / Vertical</div>
+          <input class="editable-input" id="setup-industry" placeholder="e.g. Airlines / Travel" />
+        </div>
+      </div>
+      <div class="field-row-2">
+        <div class="field-group">
+          <div class="field-label">Account Owner (AE)</div>
+          <input class="editable-input" id="setup-ae" placeholder="Your name" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Executive Sponsor</div>
+          <input class="editable-input" id="setup-exec-sponsor" placeholder="Sendbird exec name" />
+        </div>
+      </div>
+      <div class="field-row-3">
+        <div class="field-group">
+          <div class="field-label">Primary Product</div>
+          <input class="editable-input" id="setup-product" value="delight.ai AI concierge" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Fiscal Year</div>
+          <input class="editable-input" id="setup-fy" value="FY27" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Target ARR</div>
+          <input class="editable-input" id="setup-target-arr" placeholder="$XXk" />
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Known context (deal notes, prior calls, SFDC)</div>
+        <textarea class="editable-input tall" id="setup-notes" placeholder="Paste anything you already know — prior interactions, known contacts, open opportunities, product areas of interest…"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-primary" id="gen-all-btn" onclick="generateAll()">
+    Generate full account plan &#8599;
+  </button>
+  <div style="margin-top:10px;font-size:12px;color:var(--text3);">Uses web search to ground each section in real data. Each section also stays editable.</div>
+</div>
+
+<!-- SECTION 01: ACCOUNT INTELLIGENCE -->
+<div class="section" id="sec-intel">
+  <div class="section-header">
+    <div class="section-tag"><div class="s-dot"></div>01 — Account Intelligence</div>
+    <h1>Account intelligence</h1>
+    <p class="section-desc">AI-researched first pass. Edit any field directly — changes save automatically.</p>
+  </div>
+  <div class="gen-bar">
+    <div class="gen-bar-left">
+      <div class="spinner" id="intel-spinner" style="display:none;"></div>
+      <div class="gen-bar-status" id="intel-status">Not yet generated</div>
+    </div>
+    <div class="gen-bar-right">
+      <span class="last-updated" id="intel-updated"></span>
+      <button class="btn-ghost" onclick="regenSection('intel')">&#8635; Refresh with web search</button>
+    </div>
+  </div>
+
+  <div class="plan-section open" id="ps-corp">
+    <div class="plan-section-header" onclick="togglePS('ps-corp')">
+      <div class="plan-section-title">Corporate overview</div>
+      <div class="plan-section-chevron">&#9660;</div>
+    </div>
+    <div class="plan-section-body">
+      <div class="field-row-2">
+        <div class="field-group"><div class="field-label">Annual Revenue <span class="ai-badge">AI</span></div><input class="editable-input" id="corp-revenue" placeholder="[Fill in]" onchange="autosave()" /></div>
+        <div class="field-group"><div class="field-label">Employee Count <span class="ai-badge">AI</span></div><input class="editable-input" id="corp-headcount" placeholder="[Fill in]" onchange="autosave()" /></div>
+      </div>
+      <div class="field-row-2">
+        <div class="field-group"><div class="field-label">HQ Location <span class="ai-badge">AI</span></div><input class="editable-input" id="corp-hq" placeholder="[Fill in]" onchange="autosave()" /></div>
+        <div class="field-group"><div class="field-label">Fiscal Year End <span class="ai-badge">AI</span></div><input class="editable-input" id="corp-fy-end" placeholder="[Fill in]" onchange="autosave()" /></div>
+      </div>
+      <div class="field-row-2">
+        <div class="field-group"><div class="field-label">Ownership <span class="ai-badge">AI</span></div><input class="editable-input" id="corp-ownership" placeholder="Public / Private / PE-backed" onchange="autosave()" /></div>
+        <div class="field-group"><div class="field-label">Strategic Importance</div><input class="editable-input" id="corp-importance" placeholder="Tier 1 / Strategic / Named" onchange="autosave()" /></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="plan-section open" id="ps-techstack">
+    <div class="plan-section-header" onclick="togglePS('ps-techstack')">
+      <div class="plan-section-title">Technology stack</div>
+      <div class="plan-section-chevron">&#9660;</div>
+    </div>
+    <div class="plan-section-body">
+      <div class="field-row-2">
+        <div class="field-group"><div class="field-label">Current Chat / Messaging Vendor <span class="ai-badge">AI</span></div><input class="editable-input" id="tech-chat" placeholder="[Fill in]" onchange="autosave()" /></div>
+        <div class="field-group"><div class="field-label">Customer Support Platform <span class="ai-badge">AI</span></div><input class="editable-input" id="tech-support" placeholder="[Fill in]" onchange="autosave()" /></div>
+      </div>
+      <div class="field-row-2">
+        <div class="field-group"><div class="field-label">CRM <span class="ai-badge">AI</span></div><input class="editable-input" id="tech-crm" placeholder="[Fill in]" onchange="autosave()" /></div>
+        <div class="field-group"><div class="field-label">AI / Automation Tools <span class="ai-badge">AI</span></div><input class="editable-input" id="tech-ai" placeholder="[Fill in]" onchange="autosave()" /></div>
+      </div>
+      <div class="field-group"><div class="field-label">Key Integration Points for Sendbird <span class="ai-badge">AI</span></div><textarea class="editable-input" id="tech-integrations" placeholder="[Fill in]" onchange="autosave()"></textarea></div>
+    </div>
+  </div>
+
+  <div class="plan-section open" id="ps-triggers">
+    <div class="plan-section-header" onclick="togglePS('ps-triggers')">
+      <div class="plan-section-title">News, M&amp;A &amp; trigger events</div>
+      <div class="plan-section-chevron">&#9660;</div>
+    </div>
+    <div class="plan-section-body">
+      <textarea class="editable-input xtall" id="intel-triggers" placeholder="Recent news, funding rounds, leadership changes, M&A activity, earnings signals, strategic announcements…" onchange="autosave()"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 02: STAKEHOLDER MAP -->
+<div class="section" id="sec-smap">
+  <div class="section-header">
+    <div class="section-tag"><div class="s-dot"></div>02 — Stakeholder Map</div>
+    <h1>Stakeholder map</h1>
+    <p class="section-desc">Edit names, titles, engagement levels, and mutual connections. Color = engagement.</p>
+  </div>
+  <div class="gen-bar">
+    <div class="gen-bar-left">
+      <div class="spinner" id="smap-spinner" style="display:none;"></div>
+      <div class="gen-bar-status" id="smap-status">Not yet generated</div>
+    </div>
+    <div class="gen-bar-right">
+      <span class="last-updated" id="smap-updated"></span>
+      <button class="btn-ghost" onclick="regenSection('smap')">&#8635; Refresh</button>
+      <button class="btn-ghost" onclick="addStakeholderCard()">+ Add stakeholder</button>
+    </div>
+  </div>
+  <div id="smap-grid" class="stakeholder-grid"></div>
+</div>
+
+<!-- SECTION 03: 3 STORIES -->
+<div class="section" id="sec-stories">
+  <div class="section-header">
+    <div class="section-tag"><div class="s-dot"></div>03 — 3 Stories + Hypothesis</div>
+    <h1>3 stories + hypothesis</h1>
+    <p class="section-desc">Industry story, account story, use case story. Edit any bullet directly.</p>
+  </div>
+  <div class="gen-bar">
+    <div class="gen-bar-left">
+      <div class="spinner" id="stories-spinner" style="display:none;"></div>
+      <div class="gen-bar-status" id="stories-status">Not yet generated</div>
+    </div>
+    <div class="gen-bar-right">
+      <span class="last-updated" id="stories-updated"></span>
+      <button class="btn-ghost" onclick="regenSection('stories')">&#8635; Refresh</button>
+    </div>
+  </div>
+  <div id="stories-content"></div>
+</div>
+
+<!-- SECTION 04: VALUE PYRAMID -->
+<div class="section" id="sec-pyramid">
+  <div class="section-header">
+    <div class="section-tag"><div class="s-dot"></div>04 — Value Pyramid</div>
+    <h1>Value pyramid</h1>
+    <p class="section-desc">MEDDPICC-aligned from Goals down to Needs. Edit each level directly.</p>
+  </div>
+  <div class="gen-bar">
+    <div class="gen-bar-left">
+      <div class="spinner" id="pyramid-spinner" style="display:none;"></div>
+      <div class="gen-bar-status" id="pyramid-status">Not yet generated</div>
+    </div>
+    <div class="gen-bar-right">
+      <span class="last-updated" id="pyramid-updated"></span>
+      <button class="btn-ghost" onclick="regenSection('pyramid')">&#8635; Refresh</button>
+    </div>
+  </div>
+  <div class="pyramid-stack" id="pyramid-content">
+    <div class="pyramid-level goals"><div class="pyramid-level-label">Goals</div><textarea class="editable-input" id="pyr-goals" placeholder="Top-level objectives from annual reports / investor decks" onchange="autosave()"></textarea></div>
+    <div class="pyramid-level strategies"><div class="pyramid-level-label">Strategies</div><textarea class="editable-input" id="pyr-strategies" placeholder="How they plan to achieve goals — the roadmap from ambition to execution" onchange="autosave()"></textarea></div>
+    <div class="pyramid-level initiatives"><div class="pyramid-level-label">Initiatives</div><textarea class="editable-input" id="pyr-initiatives" placeholder="Specific, funded, time-bound programs — your way into discovery" onchange="autosave()"></textarea></div>
+    <div class="pyramid-level obstacles"><div class="pyramid-level-label">Obstacles</div><textarea class="editable-input" id="pyr-obstacles" placeholder="Internal or external barriers threatening initiative success" onchange="autosave()"></textarea></div>
+    <div class="pyramid-level needs"><div class="pyramid-level-label">Needs (where Sendbird lives)</div><textarea class="editable-input" id="pyr-needs" placeholder="Capabilities required to overcome obstacles" onchange="autosave()"></textarea></div>
+  </div>
+</div>
+
+<!-- SECTION 05: CURRENT VS FUTURE STATE -->
+<div class="section" id="sec-cfstate">
+  <div class="section-header">
+    <div class="section-tag"><div class="s-dot"></div>05 — Current vs. Future State</div>
+    <h1>Current vs. future state</h1>
+    <p class="section-desc">What's broken today vs. what's possible with Sendbird.</p>
+  </div>
+  <div class="gen-bar">
+    <div class="gen-bar-left">
+      <div class="spinner" id="cfstate-spinner" style="display:none;"></div>
+      <div class="gen-bar-status" id="cfstate-status">Not yet generated</div>
+    </div>
+    <div class="gen-bar-right">
+      <span class="last-updated" id="cfstate-updated"></span>
+      <button class="btn-ghost" onclick="regenSection('cfstate')">&#8635; Refresh</button>
+    </div>
+  </div>
+  <div class="field-group">
+    <div class="field-label">Compelling event</div>
+    <input class="editable-input" id="cf-event" placeholder="e.g. Legacy vendor contract renewal Q2" onchange="autosave()" />
+  </div>
+  <table class="cf-table" id="cfstate-table">
+    <thead><tr><th style="width:22%;">Category</th><th class="current">Current State</th><th class="future">Future State with Sendbird</th></tr></thead>
+    <tbody id="cf-tbody"></tbody>
+  </table>
+</div>
+
+<!-- SECTION 06: MEDDPICC -->
+<div class="section" id="sec-meddpicc">
+  <div class="section-header">
+    <div class="section-tag"><div class="s-dot"></div>06 — MEDDPICC</div>
+    <h1>MEDDPICC</h1>
+    <p class="section-desc">Set status (R/Y/G) and fill in each dimension. AI provides a hypothesis — you confirm.</p>
+  </div>
+  <div class="gen-bar">
+    <div class="gen-bar-left">
+      <div class="spinner" id="meddpicc-spinner" style="display:none;"></div>
+      <div class="gen-bar-status" id="meddpicc-status">Not yet generated</div>
+    </div>
+    <div class="gen-bar-right">
+      <span class="last-updated" id="meddpicc-updated"></span>
+      <button class="btn-ghost" onclick="regenSection('meddpicc')">&#8635; Refresh</button>
+    </div>
+  </div>
+  <div class="medd-grid" id="meddpicc-grid"></div>
+</div>
+
+<!-- SECTION 07: ROI -->
+<div class="section" id="sec-roi">
+  <div class="section-header">
+    <div class="section-tag"><div class="s-dot"></div>07 — ROI &amp; Business Case</div>
+    <h1>ROI &amp; business case</h1>
+    <p class="section-desc">AI-estimated value drivers. Edit assumptions and figures directly.</p>
+  </div>
+  <div class="gen-bar">
+    <div class="gen-bar-left">
+      <div class="spinner" id="roi-spinner" style="display:none;"></div>
+      <div class="gen-bar-status" id="roi-status">Not yet generated</div>
+    </div>
+    <div class="gen-bar-right">
+      <span class="last-updated" id="roi-updated"></span>
+      <button class="btn-ghost" onclick="regenSection('roi')">&#8635; Refresh</button>
+    </div>
+  </div>
+  <div class="roi-metrics">
+    <div class="roi-metric"><div class="roi-metric-val"><input style="background:transparent;border:none;color:var(--accent);font-size:18px;font-weight:700;font-family:var(--mono);width:100%;text-align:center;outline:none;" id="roi-investment" value="$0" onchange="autosave()" /></div><div class="roi-metric-label">Sendbird investment</div></div>
+    <div class="roi-metric"><div class="roi-metric-val"><input style="background:transparent;border:none;color:var(--accent);font-size:18px;font-weight:700;font-family:var(--mono);width:100%;text-align:center;outline:none;" id="roi-total-value" value="$0" onchange="autosave()" /></div><div class="roi-metric-label">Total annual value</div></div>
+    <div class="roi-metric"><div class="roi-metric-val"><input style="background:transparent;border:none;color:var(--accent);font-size:18px;font-weight:700;font-family:var(--mono);width:100%;text-align:center;outline:none;" id="roi-payback" value="0 mo" onchange="autosave()" /></div><div class="roi-metric-label">Payback period</div></div>
+    <div class="roi-metric"><div class="roi-metric-val"><input style="background:transparent;border:none;color:var(--accent);font-size:18px;font-weight:700;font-family:var(--mono);width:100%;text-align:center;outline:none;" id="roi-ratio" value="0:1" onchange="autosave()" /></div><div class="roi-metric-label">ROI ratio</div></div>
+  </div>
+  <table class="plan-table">
+    <thead><tr><th>Value driver</th><th>Metric</th><th>Est. annual value</th></tr></thead>
+    <tbody id="roi-tbody"></tbody>
+  </table>
+  <button class="add-row-btn" onclick="addROIRow()">+ Add value driver</button>
+  <hr class="divider">
+  <div class="field-group"><div class="field-label">Assumptions &amp; notes</div><textarea class="editable-input tall" id="roi-assumptions" placeholder="Document key assumptions — headcount used, baseline data source, % estimates…" onchange="autosave()"></textarea></div>
+</div>
+
+<!-- SECTION 08: RISKS -->
+<div class="section" id="sec-risks">
+  <div class="section-header">
+    <div class="section-tag"><div class="s-dot"></div>08 — Risks &amp; Gaps</div>
+    <h1>Risks &amp; gaps</h1>
+    <p class="section-desc">Deal risks with likelihood and mitigation. MEDDPICC and stakeholder gaps.</p>
+  </div>
+  <div class="gen-bar">
+    <div class="gen-bar-left">
+      <div class="spinner" id="risks-spinner" style="display:none;"></div>
+      <div class="gen-bar-status" id="risks-status">Not yet generated</div>
+    </div>
+    <div class="gen-bar-right">
+      <span class="last-updated" id="risks-updated"></span>
+      <button class="btn-ghost" onclick="regenSection('risks')">&#8635; Refresh</button>
+      <button class="btn-ghost" onclick="addRiskCard()">+ Add risk</button>
+    </div>
+  </div>
+  <div id="risks-content"></div>
+  <hr class="divider">
+  <div class="field-row-2">
+    <div>
+      <div class="field-label" style="margin-bottom:10px;">MEDDPICC gaps</div>
+      <textarea class="editable-input tall" id="gaps-meddpicc" placeholder="What's unconfirmed across M-E-D-D-P-I-C-C?" onchange="autosave()"></textarea>
+    </div>
+    <div>
+      <div class="field-label" style="margin-bottom:10px;">Stakeholder gaps</div>
+      <textarea class="editable-input tall" id="gaps-stakeholder" placeholder="Single-threaded risk? Missing titles? No EB access?" onchange="autosave()"></textarea>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const PLAN_KEY = 'sb_account_plan_v1';
+
+const PLAN = {
+  company: '', industry: '', ae: '', execSponsor: '', product: 'delight.ai AI concierge',
+  fy: 'FY27', targetArr: '', notes: '',
+  intel: {}, smap: [], stories: {}, pyramid: {}, cfstate: [], meddpicc: {}, roi: {}, risks: [],
+  sectionUpdated: {},
+  pendingUpdates: {},
+};
+
+let SENDBIRD_CTX = `Sendbird is an AI-powered customer communications platform.
+Products: Sendbird Chat SDK (real-time in-app messaging), delight.ai (AI concierge for proactive engagement), Sendbird AI Chatbot (ticket deflection), Sendbird Desk (omnichannel support with AI-assist).
+Key value props: 30-60% ticket deflection, CSAT improvement, replace legacy chat vendors (Intercom, Zendesk Chat, Freshchat), real-time messaging at scale.
+Proof: DoorDash 10M+ msg/day, customers avg 40% deflection in 90 days, 2-3x faster first response.
+Buyers: VP CX, CTO, VP Engineering, Chief Digital Officer.`;
+
+// ── Load saved plan ────────────────────────────────────────────────────────
+function loadPlan() {
+  try {
+    const saved = localStorage.getItem(PLAN_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      Object.assign(PLAN, data);
+      populateSetupFields();
+      if (PLAN.company) {
+        document.getElementById('mode-account-label').textContent = PLAN.company;
+        document.getElementById('sb-account-name').textContent = PLAN.company;
+        document.getElementById('sb-plan-meta').textContent = (PLAN.fy||'FY27') + ' · Last saved ' + (PLAN.lastSaved ? new Date(PLAN.lastSaved).toLocaleDateString() : 'today');
+      }
+      restoreAllSections();
+    }
+  } catch(e) { console.warn('Could not load plan:', e); }
+}
+
+function populateSetupFields() {
+  setValue('setup-company', PLAN.company);
+  setValue('setup-industry', PLAN.industry);
+  setValue('setup-ae', PLAN.ae);
+  setValue('setup-exec-sponsor', PLAN.execSponsor);
+  setValue('setup-product', PLAN.product);
+  setValue('setup-fy', PLAN.fy);
+  setValue('setup-target-arr', PLAN.targetArr);
+  setValue('setup-notes', PLAN.notes);
+}
+
+function setValue(id, val) {
+  const el = document.getElementById(id);
+  if (el && val) el.value = val;
+}
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function goTo(sec) {
+  document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('sec-' + sec)?.classList.add('active');
+  document.getElementById('nav-' + sec)?.classList.add('active');
+}
+
+function togglePS(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+// ── Save ───────────────────────────────────────────────────────────────────
+function collectSetup() {
+  PLAN.company = document.getElementById('setup-company')?.value || PLAN.company;
+  PLAN.industry = document.getElementById('setup-industry')?.value || PLAN.industry;
+  PLAN.ae = document.getElementById('setup-ae')?.value || PLAN.ae;
+  PLAN.execSponsor = document.getElementById('setup-exec-sponsor')?.value || PLAN.execSponsor;
+  PLAN.product = document.getElementById('setup-product')?.value || PLAN.product;
+  PLAN.fy = document.getElementById('setup-fy')?.value || PLAN.fy;
+  PLAN.targetArr = document.getElementById('setup-target-arr')?.value || PLAN.targetArr;
+  PLAN.notes = document.getElementById('setup-notes')?.value || PLAN.notes;
+}
+
+function saveAll() {
+  collectSetup();
+  collectIntelFields();
+  collectPyramidFields();
+  collectROIFields();
+  PLAN.lastSaved = Date.now();
+  localStorage.setItem(PLAN_KEY, JSON.stringify(PLAN));
+  document.getElementById('sb-account-name').textContent = PLAN.company || 'New Account';
+  document.getElementById('sb-plan-meta').textContent = (PLAN.fy||'FY27') + ' · Saved ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  document.getElementById('mode-account-label').textContent = PLAN.company || '';
+  toast('Plan saved');
+}
+
+function autosave() {
+  clearTimeout(window._autosaveTimer);
+  window._autosaveTimer = setTimeout(() => saveAll(), 1500);
+}
+
+function collectIntelFields() {
+  const flds = ['corp-revenue','corp-headcount','corp-hq','corp-fy-end','corp-ownership','corp-importance','tech-chat','tech-support','tech-crm','tech-ai','tech-integrations','intel-triggers'];
+  flds.forEach(id => { const el = document.getElementById(id); if (el) PLAN.intel[id] = el.value; });
+}
+
+function collectPyramidFields() {
+  ['pyr-goals','pyr-strategies','pyr-initiatives','pyr-obstacles','pyr-needs'].forEach(id => {
+    const el = document.getElementById(id); if (el) PLAN.pyramid[id] = el.value;
+  });
+}
+
+function collectROIFields() {
+  PLAN.roi.investment = document.getElementById('roi-investment')?.value;
+  PLAN.roi.totalValue = document.getElementById('roi-total-value')?.value;
+  PLAN.roi.payback = document.getElementById('roi-payback')?.value;
+  PLAN.roi.ratio = document.getElementById('roi-ratio')?.value;
+  PLAN.roi.assumptions = document.getElementById('roi-assumptions')?.value;
+}
+
+// ── Claude API ─────────────────────────────────────────────────────────────
+async function aiSearch(prompt, maxTokens = 1400) {
+  const res = await fetch('/api/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, maxTokens }),
+  });
+  if (!res.ok) throw new Error('API error ' + res.status);
+  const data = await res.json();
+  return data.text;
+}
+
+async function ai(prompt, maxTokens = 1400) {
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, maxTokens }),
+  });
+  if (!res.ok) throw new Error('API error ' + res.status);
+  const data = await res.json();
+  return data.text;
+}
+
+function parseJSON(text) {
+  return JSON.parse(text.replace(/```json|```/g, '').trim());
+}
+
+function setStatus(section, state, msg) {
+  const spinner = document.getElementById(section + '-spinner');
+  const status = document.getElementById(section + '-status');
+  const updated = document.getElementById(section + '-updated');
+  if (spinner) spinner.style.display = state === 'loading' ? 'block' : 'none';
+  if (status) { status.textContent = msg; status.className = 'gen-bar-status ' + (state === 'done' ? 'done' : state === 'loading' ? 'loading' : ''); }
+  if (state === 'done' && updated) {
+    const now = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    updated.textContent = 'Updated ' + now;
+    PLAN.sectionUpdated[section] = Date.now();
+    document.getElementById('nav-' + section)?.classList.add('has-data');
+  }
+}
+
+// ── Generate all ──────────────────────────────────────────────────────────
+async function generateAll() {
+  collectSetup();
+  if (!PLAN.company) { toast('Please enter a company name'); return; }
+
+  document.getElementById('gen-all-btn').disabled = true;
+  document.getElementById('gen-all-btn').textContent = 'Generating…';
+
+  saveAll();
+
+  // Navigate to intel first
+  goTo('intel');
+
+  // Run all sections in sequence (to avoid rate limits)
+  const sections = ['intel','smap','stories','pyramid','cfstate','meddpicc','roi','risks'];
+  for (const sec of sections) {
+    await genSection(sec);
+    saveAll();
+  }
+
+  document.getElementById('gen-all-btn').disabled = false;
+  document.getElementById('gen-all-btn').textContent = 'Regenerate full plan ↗';
+  toast('Account plan generated!');
+}
+
+async function regenSection(sec) {
+  await genSection(sec);
+  saveAll();
+}
+
+// ── Section generators ─────────────────────────────────────────────────────
+async function genSection(sec) {
+  const ctx = `${SENDBIRD_CTX}\nAccount: ${PLAN.company} (${PLAN.industry})\nProduct: ${PLAN.product}\nKnown context: ${PLAN.notes || 'None'}`;
+
+  if (sec === 'intel') await genIntel(ctx);
+  else if (sec === 'smap') await genSmap(ctx);
+  else if (sec === 'stories') await genStories(ctx);
+  else if (sec === 'pyramid') await genPyramid(ctx);
+  else if (sec === 'cfstate') await genCFState(ctx);
+  else if (sec === 'meddpicc') await genMeddpicc(ctx);
+  else if (sec === 'roi') await genROI(ctx);
+  else if (sec === 'risks') await genRisks(ctx);
+}
+
+async function genIntel(ctx) {
+  setStatus('intel', 'loading', 'Searching the web for account intelligence…');
+  const prompt = `${ctx}\n\nSearch the web for current information about ${PLAN.company}. Find: annual revenue, employee count, HQ location, fiscal year end, ownership (public/private), current tech stack (especially chat/messaging/support vendors), recent news, M&A activity, and strategic trigger events.\n\nReturn ONLY JSON (no fences):\n{"revenue":"$X","headcount":"X,000","hq":"City, Country","fy_end":"Month","ownership":"Public|Private","chat_vendor":"Name or Unknown","support_platform":"Name","crm":"Name","ai_tools":"Name(s)","integrations":"Key integration points for Sendbird","triggers":"3-4 bullet points of recent news/events/signals relevant to a Sendbird sale"}`;
+  try {
+    const data = parseJSON(await aiSearch(prompt, 1200));
+    PLAN.intel = { ...PLAN.intel, 'corp-revenue': data.revenue, 'corp-headcount': data.headcount, 'corp-hq': data.hq, 'corp-fy-end': data.fy_end, 'corp-ownership': data.ownership, 'tech-chat': data.chat_vendor, 'tech-support': data.support_platform, 'tech-crm': data.crm, 'tech-ai': data.ai_tools, 'tech-integrations': data.integrations, 'intel-triggers': data.triggers };
+    restoreIntelFields();
+    setStatus('intel', 'done', 'Generated via web search');
+  } catch(e) { setStatus('intel', 'error', 'Error: ' + e.message); }
+}
+
+async function genSmap(ctx) {
+  setStatus('smap', 'loading', 'Building stakeholder map…');
+  const prompt = `${ctx}\n\nGenerate a stakeholder map for a Sendbird deal at ${PLAN.company}. Return ONLY JSON array (no fences):\n[{"name":"[Name if known, else infer title]","title":"Likely title","role":"economic_buyer|champion|tdm|influencer|blocker","engagement":"not_engaged","priorities":"Their likely priorities","mutual_connection":"[Fill in]","notes":"How to engage this person"}]`;
+  try {
+    PLAN.smap = parseJSON(await ai(prompt, 1000));
+    renderSmap();
+    setStatus('smap', 'done', 'Generated');
+  } catch(e) { setStatus('smap', 'error', 'Error: ' + e.message); }
+}
+
+async function genStories(ctx) {
+  setStatus('stories', 'loading', 'Generating 3 stories…');
+  const prompt = `${ctx}\n\nGenerate 3 sales stories for Sendbird at ${PLAN.company}. Return ONLY JSON (no fences):\n{"industry_story":{"shift":"Macro trend creating urgency in ${PLAN.industry}","stakes":"What happens to companies that don't adapt","pattern":"What leading companies are doing"},"account_story":{"signals":"2-3 signals about ${PLAN.company}","gap":"Problem they haven't fully articulated","cost":"Cost of status quo"},"use_case_story":{"customer":"Comparable Sendbird customer in their industry","problem":"Their problem","outcome":"Specific outcome with metrics"},"hypothesis":{"use_cases":"Anticipated use cases","key_to_closing":"Key to closing","pov":"POV for next meeting","unknowns":"Unknowns to validate"}}`;
+  try {
+    PLAN.stories = parseJSON(await ai(prompt, 1100));
+    renderStories();
+    setStatus('stories', 'done', 'Generated');
+  } catch(e) { setStatus('stories', 'error', 'Error: ' + e.message); }
+}
+
+async function genPyramid(ctx) {
+  setStatus('pyramid', 'loading', 'Building value pyramid…');
+  const prompt = `${ctx}\n\nGenerate the Value Pyramid for ${PLAN.company}. Return ONLY JSON (no fences):\n{"goals":"2-3 top-level objectives from ${PLAN.company} annual reports or investor materials","strategies":"How they plan to achieve those goals","initiatives":"Specific funded programs — your entry point for discovery (include likely budget owners)","obstacles":"Internal/external barriers threatening those initiatives","needs":"Where Sendbird fits — capabilities required to overcome the obstacles"}`;
+  try {
+    const data = parseJSON(await aiSearch(prompt, 900));
+    PLAN.pyramid = { 'pyr-goals': data.goals, 'pyr-strategies': data.strategies, 'pyr-initiatives': data.initiatives, 'pyr-obstacles': data.obstacles, 'pyr-needs': data.needs };
+    restorePyramidFields();
+    setStatus('pyramid', 'done', 'Generated via web search');
+  } catch(e) { setStatus('pyramid', 'error', 'Error: ' + e.message); }
+}
+
+async function genCFState(ctx) {
+  setStatus('cfstate', 'loading', 'Generating current vs. future state…');
+  const prompt = `${ctx}\n\nGenerate current vs. future state for ${PLAN.company} with Sendbird. Return ONLY JSON array of 5 rows (no fences):\n[{"category":"Customer Support / Service","current":"What's broken or missing today","future":"Future state with Sendbird — specific and outcome-oriented"},{"category":"Notifications & Proactive Engagement","current":"...","future":"..."},{"category":"AI / Automation","current":"...","future":"..."},{"category":"Developer / Technical Experience","current":"...","future":"..."},{"category":"Digital Customer Experience","current":"...","future":"..."}]`;
+  try {
+    PLAN.cfstate = parseJSON(await ai(prompt, 900));
+    renderCFState();
+    setStatus('cfstate', 'done', 'Generated');
+  } catch(e) { setStatus('cfstate', 'error', 'Error: ' + e.message); }
+}
+
+async function genMeddpicc(ctx) {
+  setStatus('meddpicc', 'loading', 'Generating MEDDPICC hypothesis…');
+  const prompt = `${ctx}\n\nGenerate a MEDDPICC hypothesis for ${PLAN.company}. Return ONLY JSON (no fences):\n{"metrics":{"content":"Primary KPIs and quantified impact hypothesis","status":"red"},"economic_buyer":{"content":"Likely EB title and what they care about","status":"red"},"decision_criteria":{"content":"Likely business, technical, and informal criteria","status":"red"},"decision_process":{"content":"Likely evaluation and approval flow","status":"red"},"paper_process":{"content":"Typical contract and procurement path for this company type","status":"red"},"implication_of_pain":{"content":"Level 1 surface pain, Level 2 business impact, risk of status quo","status":"red"},"champion":{"content":"Likely champion profile and what their personal win looks like","status":"red"},"competition":{"content":"Likely competitors and differentiation strategy","status":"red"}}`;
+  try {
+    PLAN.meddpicc = parseJSON(await ai(prompt, 1100));
+    renderMeddpicc();
+    setStatus('meddpicc', 'done', 'Generated — update status as you qualify');
+  } catch(e) { setStatus('meddpicc', 'error', 'Error: ' + e.message); }
+}
+
+async function genROI(ctx) {
+  setStatus('roi', 'loading', 'Estimating ROI…');
+  const prompt = `${ctx}\n\nGenerate an ROI model for Sendbird at ${PLAN.company}. Return ONLY JSON (no fences):\n{"investment":"estimated ARR range","total_value":"estimated annual value","payback":"X months","ratio":"X:1","drivers":[{"driver":"Support Cost Reduction","metric":"% reduction in live agent volume","value":"$X"},{"driver":"Agent Efficiency","metric":"% reduction in AHT","value":"$X"},{"driver":"Customer Retention / NPS","metric":"NPS point improvement","value":"$X"},{"driver":"Developer Productivity","metric":"weeks saved vs. build","value":"$X"},{"driver":"Revenue from Digital Channels","metric":"% increase in digital conversion","value":"$X"}],"assumptions":"Key assumptions behind these numbers"}`;
+  try {
+    const data = parseJSON(await ai(prompt, 900));
+    setValue('roi-investment', data.investment);
+    setValue('roi-total-value', data.total_value);
+    setValue('roi-payback', data.payback);
+    setValue('roi-ratio', data.ratio);
+    setValue('roi-assumptions', data.assumptions);
+    PLAN.roi = { investment: data.investment, totalValue: data.total_value, payback: data.payback, ratio: data.ratio, assumptions: data.assumptions, drivers: data.drivers };
+    renderROITable(data.drivers || []);
+    setStatus('roi', 'done', 'Generated — update with actual data');
+  } catch(e) { setStatus('roi', 'error', 'Error: ' + e.message); }
+}
+
+async function genRisks(ctx) {
+  setStatus('risks', 'loading', 'Generating risks & gaps…');
+  const prompt = `${ctx}\n\nGenerate deal risks and gaps for ${PLAN.company}. Return ONLY JSON (no fences):\n{"risks":[{"title":"Risk name","description":"What the risk is","likelihood":"H|M|L","mitigation":"How to mitigate"},{"title":"Risk","description":"...","likelihood":"H|M|L","mitigation":"..."},{"title":"Risk","description":"...","likelihood":"H|M|L","mitigation":"..."},{"title":"Risk","description":"...","likelihood":"H|M|L","mitigation":"..."}],"meddpicc_gaps":"What's likely unconfirmed across MEDDPICC dimensions","stakeholder_gaps":"Single-threaded risk, missing titles, no EB access?"}`;
+  try {
+    const data = parseJSON(await ai(prompt, 900));
+    PLAN.risks = data.risks || [];
+    setValue('gaps-meddpicc', data.meddpicc_gaps);
+    setValue('gaps-stakeholder', data.stakeholder_gaps);
+    renderRisks();
+    setStatus('risks', 'done', 'Generated');
+  } catch(e) { setStatus('risks', 'error', 'Error: ' + e.message); }
+}
+
+// ── Renderers ──────────────────────────────────────────────────────────────
+function renderSmap() {
+  const grid = document.getElementById('smap-grid');
+  const badgeMap = { economic_buyer:'badge-eb', champion:'badge-champion', tdm:'badge-tdm', influencer:'badge-influencer', blocker:'badge-blocker' };
+  const labelMap = { economic_buyer:'Economic Buyer', champion:'Champion', tdm:'Tech DM', influencer:'Influencer', blocker:'Blocker' };
+  grid.innerHTML = (PLAN.smap || []).map((sk, i) => `
+    <div class="sk-card ${sk.engagement === 'engaged' ? 'engaged' : sk.engagement === 'met' ? 'met' : 'not-engaged'}" id="sk-card-${i}">
+      <span class="sk-role-badge ${badgeMap[sk.role]||'badge-influencer'}">${labelMap[sk.role]||sk.role}</span>
+      <div class="sk-name"><input class="sk-input" style="font-size:13px;font-weight:600;color:var(--text);" value="${sk.name||''}" placeholder="Name" onchange="PLAN.smap[${i}].name=this.value;autosave()" /></div>
+      <div class="sk-title"><input class="sk-input" value="${sk.title||''}" placeholder="Title" onchange="PLAN.smap[${i}].title=this.value;autosave()" /></div>
+      <div class="sk-field">Priorities</div>
+      <input class="sk-input" value="${sk.priorities||''}" placeholder="What they care about" onchange="PLAN.smap[${i}].priorities=this.value;autosave()" />
+      <div class="sk-field" style="margin-top:6px;">Mutual connection</div>
+      <input class="sk-input" value="${sk.mutual_connection||''}" placeholder="[Fill in]" onchange="PLAN.smap[${i}].mutual_connection=this.value;autosave()" />
+      <div class="sk-engagement">
+        <button class="sk-eng-btn ${sk.engagement==='engaged'?'active-engaged':''}" onclick="setEngagement(${i},'engaged')">Engaged</button>
+        <button class="sk-eng-btn ${sk.engagement==='met'?'active-met':''}" onclick="setEngagement(${i},'met')">Met</button>
+        <button class="sk-eng-btn ${(!sk.engagement||sk.engagement==='not_engaged')?'active-not':''}" onclick="setEngagement(${i},'not_engaged')">Not engaged</button>
+      </div>
+    </div>`).join('');
+}
+
+function setEngagement(i, val) {
+  PLAN.smap[i].engagement = val;
+  renderSmap();
+  autosave();
+}
+
+function addStakeholderCard() {
+  PLAN.smap.push({ name:'', title:'', role:'influencer', engagement:'not_engaged', priorities:'', mutual_connection:'', notes:'' });
+  renderSmap();
+  autosave();
+}
+
+function renderStories() {
+  const d = PLAN.stories;
+  if (!d) return;
+  const is = d.industry_story || {};
+  const as = d.account_story || {};
+  const us = d.use_case_story || {};
+  const hy = d.hypothesis || {};
+
+  document.getElementById('stories-content').innerHTML = `
+    <div class="stories-grid">
+      <div class="story-card">
+        <div class="story-num">01</div>
+        <div class="story-card-title">Industry story</div>
+        <div class="story-card-sub">What's happening in their world?</div>
+        ${storyBullet('The shift', 'st-shift', is.shift)}
+        ${storyBullet('The stakes', 'st-stakes', is.stakes)}
+        ${storyBullet('The pattern', 'st-pattern', is.pattern)}
+      </div>
+      <div class="story-card">
+        <div class="story-num">02</div>
+        <div class="story-card-title">Account story</div>
+        <div class="story-card-sub">What's specific to this company?</div>
+        ${storyBullet('What we know', 'st-signals', as.signals)}
+        ${storyBullet('The gap', 'st-gap', as.gap)}
+        ${storyBullet('Cost of status quo', 'st-cost', as.cost)}
+      </div>
+      <div class="story-card">
+        <div class="story-num">03</div>
+        <div class="story-card-title">Use case story</div>
+        <div class="story-card-sub">What's possible?</div>
+        ${storyBullet('Customer', 'st-customer', us.customer)}
+        ${storyBullet('Problem', 'st-problem', us.problem)}
+        ${storyBullet('Outcome', 'st-outcome', us.outcome)}
+      </div>
+    </div>
+    <div class="plan-section open" style="background:var(--bg2);border:1px solid rgba(191,255,88,0.15);border-radius:var(--radius-lg);padding:16px 20px;">
+      <div class="field-label" style="color:var(--accent);margin-bottom:12px;font-size:11px;letter-spacing:0.1em;">OUR HYPOTHESIS</div>
+      <div class="field-row-2">
+        <div class="field-group"><div class="field-label">Anticipated use cases</div><textarea class="editable-input" id="hypo-use-cases" onchange="PLAN.stories.hypothesis={...PLAN.stories.hypothesis,use_cases:this.value};autosave()">${hy.use_cases||''}</textarea></div>
+        <div class="field-group"><div class="field-label">Key to closing</div><textarea class="editable-input" id="hypo-closing" onchange="PLAN.stories.hypothesis={...PLAN.stories.hypothesis,key_to_closing:this.value};autosave()">${hy.key_to_closing||''}</textarea></div>
+      </div>
+      <div class="field-row-2">
+        <div class="field-group"><div class="field-label">POV for next meeting</div><textarea class="editable-input" id="hypo-pov" onchange="PLAN.stories.hypothesis={...PLAN.stories.hypothesis,pov:this.value};autosave()">${hy.pov||''}</textarea></div>
+        <div class="field-group"><div class="field-label">Unknowns to validate</div><textarea class="editable-input" id="hypo-unknowns" onchange="PLAN.stories.hypothesis={...PLAN.stories.hypothesis,unknowns:this.value};autosave()">${hy.unknowns||''}</textarea></div>
+      </div>
+    </div>`;
+}
+
+function storyBullet(label, id, val) {
+  return `<div class="story-bullet-row"><div class="story-bullet-dot"></div><div style="flex:1;"><div class="story-bullet-label">${label}</div><textarea class="sk-input" style="width:100%;min-height:40px;resize:none;font-size:12px;color:var(--text2);line-height:1.5;" id="${id}" onchange="autosave()">${val||''}</textarea></div></div>`;
+}
+
+function renderMeddpicc() {
+  const d = PLAN.meddpicc;
+  const items = [
+    { key:'metrics', letter:'M', title:'Metrics', sub:'KPIs + quantified impact' },
+    { key:'economic_buyer', letter:'E', title:'Economic Buyer', sub:'Budget owner + access' },
+    { key:'decision_criteria', letter:'D', title:'Decision Criteria', sub:'Business + technical + informal' },
+    { key:'decision_process', letter:'D', title:'Decision Process', sub:'Steps, timeline, approvals' },
+    { key:'paper_process', letter:'P', title:'Paper Process', sub:'Legal, procurement, security' },
+    { key:'implication_of_pain', letter:'I', title:'Implication of Pain', sub:'Surface → business impact → risk' },
+    { key:'champion', letter:'C', title:'Champion', sub:'Internal seller + personal win' },
+    { key:'competition', letter:'C', title:'Competition', sub:'External + internal + reframe' },
+  ];
+  document.getElementById('meddpicc-grid').innerHTML = items.map(item => {
+    const entry = d[item.key] || {};
+    const status = entry.status || 'red';
+    return `<div class="medd-card">
+      <div class="medd-label"><span class="medd-letter">${item.letter}</span><div><div class="medd-title">${item.title}</div><div class="medd-sub">${item.sub}</div></div></div>
+      <textarea class="editable-input" style="min-height:80px;font-size:12px;" onchange="PLAN.meddpicc['${item.key}']={content:this.value,status:PLAN.meddpicc['${item.key}']?.status||'red'};autosave()">${entry.content||''}</textarea>
+      <div class="medd-status">
+        <button class="medd-status-btn medd-r ${status==='red'?'sel':''}" onclick="setMeddStatus('${item.key}','red',this)">R</button>
+        <button class="medd-status-btn medd-y ${status==='yellow'?'sel':''}" onclick="setMeddStatus('${item.key}','yellow',this)">Y</button>
+        <button class="medd-status-btn medd-g ${status==='green'?'sel':''}" onclick="setMeddStatus('${item.key}','green',this)">G</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setMeddStatus(key, status, btn) {
+  if (!PLAN.meddpicc[key]) PLAN.meddpicc[key] = {};
+  PLAN.meddpicc[key].status = status;
+  const parent = btn.closest('.medd-status');
+  parent.querySelectorAll('.medd-status-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  autosave();
+}
+
+function renderCFState() {
+  const tbody = document.getElementById('cf-tbody');
+  tbody.innerHTML = (PLAN.cfstate || []).map((row, i) => `
+    <tr>
+      <td><div class="cf-category">${row.category}</div></td>
+      <td><textarea onchange="PLAN.cfstate[${i}].current=this.value;autosave()">${row.current||''}</textarea></td>
+      <td><textarea onchange="PLAN.cfstate[${i}].future=this.value;autosave()">${row.future||''}</textarea></td>
+    </tr>`).join('');
+}
+
+function renderROITable(drivers) {
+  const tbody = document.getElementById('roi-tbody');
+  tbody.innerHTML = drivers.map((d, i) => `
+    <tr>
+      <td><input value="${d.driver||''}" onchange="PLAN.roi.drivers[${i}]={...PLAN.roi.drivers[${i}],driver:this.value};autosave()" /></td>
+      <td><input value="${d.metric||''}" onchange="PLAN.roi.drivers[${i}]={...PLAN.roi.drivers[${i}],metric:this.value};autosave()" /></td>
+      <td><input value="${d.value||''}" onchange="PLAN.roi.drivers[${i}]={...PLAN.roi.drivers[${i}],value:this.value};autosave()" /></td>
+    </tr>`).join('');
+}
+
+function addROIRow() {
+  if (!PLAN.roi.drivers) PLAN.roi.drivers = [];
+  PLAN.roi.drivers.push({ driver:'', metric:'', value:'' });
+  renderROITable(PLAN.roi.drivers);
+  autosave();
+}
+
+function renderRisks() {
+  const container = document.getElementById('risks-content');
+  container.innerHTML = (PLAN.risks || []).map((r, i) => `
+    <div class="risk-card">
+      <div>
+        <div class="risk-title"><input style="background:transparent;border:none;color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);width:100%;outline:none;border-bottom:1px solid var(--border);" value="${r.title||''}" placeholder="Risk name" onchange="PLAN.risks[${i}].title=this.value;autosave()" /></div>
+        <div class="risk-desc" style="margin-top:6px;"><textarea class="sk-input" style="width:100%;min-height:50px;font-size:12px;line-height:1.5;resize:none;" onchange="PLAN.risks[${i}].description=this.value;autosave()">${r.description||''}</textarea></div>
+      </div>
+      <div class="risk-likelihood">
+        <div class="risk-lik-label">Likelihood</div>
+        <span class="risk-lik-badge lik-${(r.likelihood||'M').toLowerCase()}">${r.likelihood||'M'}</span>
+        <div style="margin-top:6px;display:flex;gap:4px;">
+          <button class="medd-status-btn medd-r ${r.likelihood==='H'?'sel':''}" onclick="PLAN.risks[${i}].likelihood='H';renderRisks();autosave()">H</button>
+          <button class="medd-status-btn medd-y ${r.likelihood==='M'?'sel':''}" onclick="PLAN.risks[${i}].likelihood='M';renderRisks();autosave()">M</button>
+          <button class="medd-status-btn medd-g ${r.likelihood==='L'?'sel':''}" onclick="PLAN.risks[${i}].likelihood='L';renderRisks();autosave()">L</button>
+        </div>
+      </div>
+      <div>
+        <div class="risk-lik-label" style="color:var(--accent2);">Mitigation</div>
+        <div class="risk-mitigation"><textarea class="sk-input" style="width:100%;min-height:60px;font-size:12px;line-height:1.5;resize:none;" onchange="PLAN.risks[${i}].mitigation=this.value;autosave()">${r.mitigation||''}</textarea></div>
+      </div>
+    </div>`).join('');
+}
+
+function addRiskCard() {
+  PLAN.risks.push({ title:'', description:'', likelihood:'M', mitigation:'' });
+  renderRisks();
+  autosave();
+}
+
+// ── Restore from saved plan ────────────────────────────────────────────────
+function restoreAllSections() {
+  restoreIntelFields();
+  restorePyramidFields();
+  if (PLAN.smap?.length) renderSmap();
+  if (PLAN.stories?.industry_story) renderStories();
+  if (PLAN.cfstate?.length) renderCFState();
+  if (Object.keys(PLAN.meddpicc||{}).length) renderMeddpicc();
+  if (PLAN.roi?.drivers?.length) renderROITable(PLAN.roi.drivers);
+  if (PLAN.risks?.length) renderRisks();
+
+  // Restore ROI metrics
+  if (PLAN.roi) {
+    setValue('roi-investment', PLAN.roi.investment);
+    setValue('roi-total-value', PLAN.roi.totalValue);
+    setValue('roi-payback', PLAN.roi.payback);
+    setValue('roi-ratio', PLAN.roi.ratio);
+    setValue('roi-assumptions', PLAN.roi.assumptions);
+  }
+
+  // Restore CF state gaps
+  setValue('gaps-meddpicc', PLAN.risks_gaps_meddpicc);
+  setValue('gaps-stakeholder', PLAN.risks_gaps_stakeholder);
+  setValue('cf-event', PLAN.cf_event);
+
+  // Mark sections as having data
+  const secKeys = ['intel','smap','stories','pyramid','cfstate','meddpicc','roi','risks'];
+  secKeys.forEach(k => {
+    if (PLAN.sectionUpdated?.[k]) {
+      document.getElementById('nav-' + k)?.classList.add('has-data');
+      const updated = document.getElementById(k + '-updated');
+      if (updated) updated.textContent = 'Saved';
+      const status = document.getElementById(k + '-status');
+      if (status) { status.textContent = 'Loaded from saved plan'; status.className = 'gen-bar-status done'; }
+    }
+  });
+}
+
+function restoreIntelFields() {
+  Object.entries(PLAN.intel || {}).forEach(([k, v]) => setValue(k, v));
+}
+
+function restorePyramidFields() {
+  Object.entries(PLAN.pyramid || {}).forEach(([k, v]) => setValue(k, v));
+}
+
+// ── Check for updates ─────────────────────────────────────────────────────
+async function checkForUpdates() {
+  if (!PLAN.company) { toast('Save a plan first'); return; }
+  toast('Checking for new signals…');
+  const prompt = `Search the web for the latest news about ${PLAN.company} in the last 30 days. Focus on: leadership changes, earnings, product launches, M&A activity, strategic announcements, hiring signals, or anything relevant to a Sendbird sale. Return a 3-4 bullet plain text summary.`;
+  try {
+    const updates = await aiSearch(prompt, 600);
+    PLAN.pendingUpdates = { intel: updates, timestamp: Date.now() };
+    localStorage.setItem(PLAN_KEY, JSON.stringify(PLAN));
+    const banner = document.getElementById('update-banner');
+    document.getElementById('update-banner-text').textContent = `New signals found for ${PLAN.company} — click to review.`;
+    banner.classList.add('show');
+  } catch(e) { toast('Error checking updates: ' + e.message); }
+}
+
+function applyUpdates() {
+  if (!PLAN.pendingUpdates?.intel) return;
+  const existing = document.getElementById('intel-triggers');
+  if (existing) {
+    const timestamp = new Date(PLAN.pendingUpdates.timestamp).toLocaleDateString();
+    existing.value = `[Updated ${timestamp}]\n${PLAN.pendingUpdates.intel}\n\n[Previous]\n${existing.value}`;
+    PLAN.intel['intel-triggers'] = existing.value;
+    autosave();
+  }
+  dismissUpdate();
+  goTo('intel');
+  toast('Signals added to Account Intelligence');
+}
+
+function dismissUpdate() {
+  document.getElementById('update-banner').classList.remove('show');
+}
+
+// ── Export to Google Doc ───────────────────────────────────────────────────
+function exportDoc() {
+  collectSetup(); collectIntelFields(); collectPyramidFields(); collectROIFields();
+  const is = PLAN.stories?.industry_story || {};
+  const as = PLAN.stories?.account_story || {};
+  const us = PLAN.stories?.use_case_story || {};
+  const hy = PLAN.stories?.hypothesis || {};
+
+  const content = `ACCOUNT PLAN — ${PLAN.company?.toUpperCase() || 'ACCOUNT'}
+${PLAN.fy || 'FY27'} | AE: ${PLAN.ae || ''} | Executive Sponsor: ${PLAN.execSponsor || ''}
+Product: ${PLAN.product || ''} | Target ARR: ${PLAN.targetArr || ''}
+${'═'.repeat(50)}
+
+01 ACCOUNT INTELLIGENCE
+
+Revenue: ${PLAN.intel['corp-revenue']||''}
+Employees: ${PLAN.intel['corp-headcount']||''}
+HQ: ${PLAN.intel['corp-hq']||''}
+Ownership: ${PLAN.intel['corp-ownership']||''}
+Chat Vendor: ${PLAN.intel['tech-chat']||''}
+Support Platform: ${PLAN.intel['tech-support']||''}
+CRM: ${PLAN.intel['tech-crm']||''}
+
+Trigger Events:
+${PLAN.intel['intel-triggers']||''}
+
+${'─'.repeat(50)}
+02 STAKEHOLDER MAP
+
+${(PLAN.smap||[]).map(sk=>`${sk.role?.toUpperCase().replace('_',' ')}: ${sk.name||'[Name]'} — ${sk.title||''}\nPriorities: ${sk.priorities||''}\nEngagement: ${sk.engagement||'Not engaged'}`).join('\n\n')}
+
+${'─'.repeat(50)}
+03 3 STORIES + HYPOTHESIS
+
+Industry Story:
+• Shift: ${is.shift||''}
+• Stakes: ${is.stakes||''}
+• Pattern: ${is.pattern||''}
+
+Account Story:
+• Signals: ${as.signals||''}
+• Gap: ${as.gap||''}
+• Cost of status quo: ${as.cost||''}
+
+Use Case Story:
+• Customer: ${us.customer||''}
+• Problem: ${us.problem||''}
+• Outcome: ${us.outcome||''}
+
+Hypothesis:
+• Use cases: ${hy.use_cases||''}
+• Key to closing: ${hy.key_to_closing||''}
+• POV: ${hy.pov||''}
+• Unknowns: ${hy.unknowns||''}
+
+${'─'.repeat(50)}
+04 VALUE PYRAMID
+
+Goals: ${PLAN.pyramid['pyr-goals']||''}
+Strategies: ${PLAN.pyramid['pyr-strategies']||''}
+Initiatives: ${PLAN.pyramid['pyr-initiatives']||''}
+Obstacles: ${PLAN.pyramid['pyr-obstacles']||''}
+Needs (Sendbird): ${PLAN.pyramid['pyr-needs']||''}
+
+${'─'.repeat(50)}
+05 CURRENT VS FUTURE STATE
+
+${(PLAN.cfstate||[]).map(r=>`${r.category}\nCurrent: ${r.current||''}\nFuture: ${r.future||''}`).join('\n\n')}
+
+${'─'.repeat(50)}
+06 MEDDPICC
+
+${Object.entries(PLAN.meddpicc||{}).map(([k,v])=>`${k.toUpperCase().replace(/_/g,' ')}: [${v.status?.toUpperCase()||'R'}]\n${v.content||''}`).join('\n\n')}
+
+${'─'.repeat(50)}
+07 ROI & BUSINESS CASE
+
+Investment: ${PLAN.roi.investment||''}
+Total Annual Value: ${PLAN.roi.totalValue||''}
+Payback: ${PLAN.roi.payback||''}
+ROI Ratio: ${PLAN.roi.ratio||''}
+
+${(PLAN.roi.drivers||[]).map(d=>`${d.driver}: ${d.metric} → ${d.value}`).join('\n')}
+
+Assumptions: ${PLAN.roi.assumptions||''}
+
+${'─'.repeat(50)}
+08 RISKS & GAPS
+
+${(PLAN.risks||[]).map(r=>`[${r.likelihood||'M'}] ${r.title}\n${r.description||''}\nMitigation: ${r.mitigation||''}`).join('\n\n')}
+
+MEDDPICC Gaps: ${document.getElementById('gaps-meddpicc')?.value||''}
+Stakeholder Gaps: ${document.getElementById('gaps-stakeholder')?.value||''}`;
+
+  // Open Google Docs with pre-filled content via URL encoding
+  const encoded = encodeURIComponent(content);
+  const docUrl = `https://docs.google.com/document/create?title=${encodeURIComponent('Account Plan — ' + (PLAN.company||'Account') + ' ' + (PLAN.fy||'FY27'))}&body=${encoded}`;
+
+  // Fallback: copy to clipboard and instruct
+  navigator.clipboard.writeText(content).then(() => {
+    toast('Copied! Opening Google Docs — paste with Ctrl+V');
+    setTimeout(() => window.open('https://docs.google.com/document/create', '_blank'), 800);
+  });
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadPlan();
+
+// Default CF state rows if empty
+if (!PLAN.cfstate?.length) {
+  const categories = ['Customer Support / Service','Notifications & Proactive Engagement','AI / Automation','Developer / Technical Experience','Digital Customer Experience'];
+  PLAN.cfstate = categories.map(c => ({ category: c, current: '', future: '' }));
+  renderCFState();
+}
+
+// Default MEDDPICC if empty
+if (!Object.keys(PLAN.meddpicc||{}).length) {
+  const keys = ['metrics','economic_buyer','decision_criteria','decision_process','paper_process','implication_of_pain','champion','competition'];
+  keys.forEach(k => { PLAN.meddpicc[k] = { content: '', status: 'red' }; });
+  renderMeddpicc();
+}
+</script>
+</body>
+</html>
